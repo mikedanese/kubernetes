@@ -1222,6 +1222,14 @@ func ValidateReplicationControllerSpec(spec *api.ReplicationControllerSpec) errs
 	return allErrs
 }
 
+func ValidateJob(job *api.Job) errs.ValidationErrorList {
+	return errs.ValidationErrorList{}
+}
+
+func ValidateJobUpdate(oldJob, job *api.Job) errs.ValidationErrorList {
+	return errs.ValidationErrorList{}
+}
+
 // ValidatePodTemplateSpec validates the spec of a pod template
 func ValidatePodTemplateSpec(spec *api.PodTemplateSpec, replicas int) errs.ValidationErrorList {
 	allErrs := errs.ValidationErrorList{}
