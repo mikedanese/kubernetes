@@ -20,7 +20,7 @@
             }
          },
          "spec":{
-            "restartPolicy": "Never",
+            "restartPolicy": "OnFailure",
             "containers":[
                {
                   "name":"test-container",
