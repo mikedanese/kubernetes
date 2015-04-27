@@ -974,7 +974,7 @@ type PodTemplateList struct {
 // JobSpec is the specification of a job.
 type JobSpec struct {
 	// Completions is the number of desired completions.
-	Completions int `json:"completions" description:"number of completions desired"`
+	Completions int `json:"completions" description:"number of times the job has completed successfully (desired or observed, as appropriate)"`
 
 	// Selector is a label query over pods that should match the Completions count.
 	// If Selector is empty, it is defaulted to the labels present on the Pod template.
