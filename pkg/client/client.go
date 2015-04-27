@@ -72,6 +72,10 @@ func (c *Client) PodTemplates(namespace string) PodTemplateInterface {
 	return newPodTemplates(c, namespace)
 }
 
+func (c *Client) Jobs(namespace string) JobsInterface {
+	return newJobs(c, namespace)
+}
+
 func (c *Client) Services(namespace string) ServiceInterface {
 	return newServices(c, namespace)
 }

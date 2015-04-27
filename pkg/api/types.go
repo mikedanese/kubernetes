@@ -1058,7 +1058,6 @@ type JobSpec struct {
 	// Selector is a label query over pods that should match the completed count.
 	Selector map[string]string `json:"selector"`
 
-	// TODO: Why is this needed?
 	// TemplateRef is a reference to an object that describes the pod that will be created if
 	// some fail to complete. This reference is ignored if a Template is set.
 	// Must be set before converting to a v1beta3 API object
