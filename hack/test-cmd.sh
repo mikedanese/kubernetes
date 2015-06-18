@@ -141,6 +141,7 @@ for version in "${kube_api_versions[@]}"; do
   rc_status_replicas_field=".status.replicas"
   rc_container_image_field=".spec.template.spec.containers"
   port_field="(index .spec.ports 0).port"
+  image_field="(index .spec.containers 0).image"
 
   # Passing no arguments to create is an error
   ! kubectl create
@@ -305,6 +306,14 @@ for version in "${kube_api_versions[@]}"; do
   kubectl create -f examples/limitrange/valid-pod.json "${kube_flags[@]}"
   # Post-condition: valid-pod POD is running
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" 'valid-pod:'
+
+  ## --patch update pod can change image
+  # Pre-condition: valid-pod POD is running
+  kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" 'valid-pod:'
+  # Command
+  kubectl update "${kube_flags[@]}" pod valid-pod --patch='{"spec":{"containers":[{"name": "kubernetes-serve-hostname", "image": "nginx"}]}}'
+  # Post-condition: valid-pod POD has image nginx
+  kube::test::get_object_assert pods "{{range.items}}{{$image_field}}:{{end}}" 'nginx:'
 
   ### Overwriting an existing label is not permitted
   # Pre-condition: name is valid-pod
