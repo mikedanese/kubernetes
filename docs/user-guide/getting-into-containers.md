@@ -21,7 +21,7 @@ certainly want the docs that go with that version.</h1>
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
 
-﻿#Getting into containers: kubectl exec
+﻿# Getting into containers: kubectl exec
 
 Developers can use `kubectl exec` to run commands in a container. This guide demonstrates two use cases.
 
