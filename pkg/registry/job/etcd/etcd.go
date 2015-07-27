@@ -34,10 +34,10 @@ type REST struct {
 
 // jobPrefix is the location for jobs in etcd, only exposed
 // for testing
-var jobPrefix = "/registry/jobs"
+var jobPrefix = "/jobs"
 
 // NewREST returns a RESTStorage object that will work against jobs.
-func NewREST(h tools.EtcdHelper) *REST {
+func NewREST(s tools.StorageInterface) *REST {
 	store := &etcdgeneric.Etcd{
 		NewFunc: func() runtime.Object { return &api.Job{} },
 
@@ -69,7 +69,7 @@ func NewREST(h tools.EtcdHelper) *REST {
 		// Used to validate job updates
 		UpdateStrategy: job.Strategy,
 
-		Helper: h,
+		Storage: s,
 	}
 
 	return &REST{store}

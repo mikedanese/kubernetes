@@ -1243,7 +1243,7 @@ func ValidateJobSpec(spec *api.JobSpec) errs.ValidationErrorList {
 		}
 		allErrs = append(allErrs, ValidatePodTemplateSpec(spec.Template, spec.Completions).Prefix("template")...)
 		if spec.Template.Spec.RestartPolicy != api.RestartPolicyOnFailure {
-			allErrs = append(allErrs, errs.NewFieldNotSupported("template.restartPolicy", spec.Template.Spec.RestartPolicy))
+			allErrs = append(allErrs, errs.NewFieldValueNotSupported("template.restartPolicy", spec.Template.Spec.RestartPolicy, []string{string(api.RestartPolicyOnFailure)}))
 		}
 	}
 	return allErrs

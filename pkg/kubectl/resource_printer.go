@@ -505,7 +505,7 @@ func printPodTemplateList(podList *api.PodTemplateList, w io.Writer, withNamespa
 	return nil
 }
 
-func printJob(job *api.Job, w io.Writer) error {
+func printJob(job *api.Job, w io.Writer, withNamespace bool, wide bool, columnLabels []string) error {
 	containers := job.Spec.Template.Spec.Containers
 	var firstContainer api.Container
 	if len(containers) > 0 {
@@ -530,9 +530,9 @@ func printJob(job *api.Job, w io.Writer) error {
 	return nil
 }
 
-func printJobList(list *api.JobList, w io.Writer) error {
+func printJobList(list *api.JobList, w io.Writer, withNamespace bool, wide bool, columnLabels []string) error {
 	for _, job := range list.Items {
-		if err := printJob(&job, w); err != nil {
+		if err := printJob(&job, w, withNamespace, wide, columnLabels); err != nil {
 			return err
 		}
 	}

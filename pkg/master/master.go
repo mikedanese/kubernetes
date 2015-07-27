@@ -78,6 +78,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/registry/service/allocator"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/registry/service/portallocator"
+	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful/swagger"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
@@ -468,7 +469,6 @@ func (m *Master) init(c *Config) {
 	m.serviceNodePortAllocator = serviceNodePortRegistry
 
 	controllerStorage := controlleretcd.NewREST(c.DatabaseStorage)
-	controllerStorage := controlleretcd.NewREST(c.EtcdHelper)
 	jobStorage := jobetcd.NewREST(c.DatabaseStorage)
 
 	// TODO: Factor out the core API registration
