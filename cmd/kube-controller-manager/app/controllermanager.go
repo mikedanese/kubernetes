@@ -36,6 +36,7 @@ import (
 	clientcmdapi "github.com/GoogleCloudPlatform/kubernetes/pkg/client/clientcmd/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/controller/endpoint"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/controller/job"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/controller/namespace"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/controller/node"
 	replicationControllerPkg "github.com/GoogleCloudPlatform/kubernetes/pkg/controller/replication"
@@ -188,6 +189,8 @@ func (s *CMServer) Run(_ []string) error {
 
 	controllerManager := replicationControllerPkg.NewReplicationManager(kubeClient, replicationControllerPkg.BurstReplicas)
 	go controllerManager.Run(s.ConcurrentRCSyncs, util.NeverStop)
+	jobManger := job.NewJobManager(kubeClient, replicationControllerPkg.BurstReplicas)
+	go jobManger.Run(s.ConcurrentRCSyncs, util.NeverStop)
 
 	cloud, err := cloudprovider.InitCloudProvider(s.CloudProvider, s.CloudConfigFile)
 	if err != nil {
