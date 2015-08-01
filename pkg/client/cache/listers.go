@@ -278,4 +278,32 @@ func (s *StoreToJobLister) List() (jobs api.JobList, err error) {
 	return jobs, nil
 }
 
+func (s *StoreToJobLister) GetPodJobs(pod *api.Pod) (jobs []*api.Job, err error) {
+	var selector labels.Selector
+
+	if len(pod.Labels) == 0 {
+		err = fmt.Errorf("No controllers found for pod %v because it has no labels", pod.Name)
+		return
+	}
+
+	for _, m := range s.Store.List() {
+		job := m.(*api.Job)
+		if job.Namespace != pod.Namespace {
+			continue
+		}
+		labelSet := labels.Set(job.Spec.Selector)
+		selector = labels.Set(job.Spec.Selector).AsSelector()
+
+		// If a job with a nil or empty selector creeps in, it should match nothing, not everything.
+		if labelSet.AsSelector().Empty() || !selector.Matches(labels.Set(pod.Labels)) {
+			continue
+		}
+		jobs = append(jobs, job)
+	}
+	if len(jobs) == 0 {
+		err = fmt.Errorf("Could not find controllers for pod %s in namespace %s with labels: %v", pod.Name, pod.Namespace, pod.Labels)
+	}
+	return
+}
+
 // TODO: add StoreToEndpointsLister for use in kube-proxy.
