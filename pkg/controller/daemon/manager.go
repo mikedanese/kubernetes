@@ -22,12 +22,20 @@ import (
 
 	"github.com/golang/glog"
 	"k8s.io/kubernetes/pkg/api"
+<<<<<<< HEAD
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/client/unversioned/cache"
 	"k8s.io/kubernetes/pkg/client/unversioned/record"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/controller/framework"
 	"k8s.io/kubernetes/pkg/expapi"
+=======
+	"k8s.io/kubernetes/pkg/client"
+	"k8s.io/kubernetes/pkg/client/cache"
+	"k8s.io/kubernetes/pkg/client/record"
+	"k8s.io/kubernetes/pkg/controller"
+	"k8s.io/kubernetes/pkg/controller/framework"
+>>>>>>> 3d5ca72... Add daemon manager
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/runtime"
@@ -95,21 +103,37 @@ func NewDaemonManager(kubeClient client.Interface) *DaemonManager {
 				return dm.kubeClient.Daemons(api.NamespaceAll).Watch(labels.Everything(), fields.Everything(), rv)
 			},
 		},
+<<<<<<< HEAD
 		&expapi.Daemon{},
 		FullDaemonResyncPeriod,
 		framework.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				daemon := obj.(*expapi.Daemon)
+=======
+		&api.Daemon{},
+		FullDaemonResyncPeriod,
+		framework.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				daemon := obj.(*api.Daemon)
+>>>>>>> 3d5ca72... Add daemon manager
 				glog.V(4).Infof("Adding daemon %s", daemon.Name)
 				dm.enqueueController(obj)
 			},
 			UpdateFunc: func(old, cur interface{}) {
+<<<<<<< HEAD
 				oldDaemon := old.(*expapi.Daemon)
+=======
+				oldDaemon := old.(*api.Daemon)
+>>>>>>> 3d5ca72... Add daemon manager
 				glog.V(4).Infof("Updating daemon %s", oldDaemon.Name)
 				dm.enqueueController(cur)
 			},
 			DeleteFunc: func(obj interface{}) {
+<<<<<<< HEAD
 				daemon := obj.(*expapi.Daemon)
+=======
+				daemon := obj.(*api.Daemon)
+>>>>>>> 3d5ca72... Add daemon manager
 				glog.V(4).Infof("Deleting daemon %s", daemon.Name)
 				dm.enqueueController(obj)
 			},
@@ -206,8 +230,13 @@ func (dm *DaemonManager) enqueueController(obj interface{}) {
 	dm.queue.Add(key)
 }
 
+<<<<<<< HEAD
 func (dm *DaemonManager) getPodDaemon(pod *api.Pod) *expapi.Daemon {
 	controllers, err := dm.dcStore.GetPodDaemons(pod)
+=======
+func (dm *DaemonManager) getPodDaemon(pod *api.Pod) *api.Daemon {
+	controllers, err := dm.dcStore.GetPodDaemon(pod)
+>>>>>>> 3d5ca72... Add daemon manager
 	if err != nil {
 		glog.V(4).Infof("No controllers found for pod %v, daemon manager will avoid syncing", pod.Name)
 		return nil
@@ -302,7 +331,11 @@ func (dm *DaemonManager) updateNode(old, cur interface{}) {
 }
 
 // getNodesToDaemonPods returns a map from nodes to daemon pods (corresponding to dc) running on the nodes.
+<<<<<<< HEAD
 func (dm *DaemonManager) getNodesToDaemonPods(dc *expapi.Daemon) (map[string][]*api.Pod, error) {
+=======
+func (dm *DaemonManager) getNodesToDaemonPods(dc *api.Daemon) (map[string][]*api.Pod, error) {
+>>>>>>> 3d5ca72... Add daemon manager
 	nodeToDaemonPods := make(map[string][]*api.Pod)
 	daemonPods, err := dm.podStore.Pods(dc.Namespace).List(labels.Set(dc.Spec.Selector).AsSelector())
 	if err != nil {
@@ -315,7 +348,11 @@ func (dm *DaemonManager) getNodesToDaemonPods(dc *expapi.Daemon) (map[string][]*
 	return nodeToDaemonPods, nil
 }
 
+<<<<<<< HEAD
 func (dm *DaemonManager) manageDaemons(dc *expapi.Daemon) {
+=======
+func (dm *DaemonManager) manageDaemons(dc *api.Daemon) {
+>>>>>>> 3d5ca72... Add daemon manager
 	// Find out which nodes are running the daemon pods selected by dc.
 	nodeToDaemonPods, err := dm.getNodesToDaemonPods(dc)
 	if err != nil {
@@ -381,7 +418,11 @@ func (dm *DaemonManager) manageDaemons(dc *expapi.Daemon) {
 	}
 }
 
+<<<<<<< HEAD
 func storeDaemonStatus(dcClient client.DaemonInterface, dc *expapi.Daemon, desiredNumberScheduled, currentNumberScheduled, numberMisscheduled int) error {
+=======
+func storeDaemonStatus(dcClient client.DaemonInterface, dc *api.Daemon, desiredNumberScheduled, currentNumberScheduled, numberMisscheduled int) error {
+>>>>>>> 3d5ca72... Add daemon manager
 	if dc.Status.DesiredNumberScheduled == desiredNumberScheduled && dc.Status.CurrentNumberScheduled == currentNumberScheduled && dc.Status.NumberMisscheduled == numberMisscheduled {
 		return nil
 	}
@@ -406,7 +447,11 @@ func storeDaemonStatus(dcClient client.DaemonInterface, dc *expapi.Daemon, desir
 	return updateErr
 }
 
+<<<<<<< HEAD
 func (dm *DaemonManager) updateDaemonStatus(dc *expapi.Daemon) {
+=======
+func (dm *DaemonManager) updateDaemonStatus(dc *api.Daemon) {
+>>>>>>> 3d5ca72... Add daemon manager
 	glog.Infof("Updating daemon status")
 	nodeToDaemonPods, err := dm.getNodesToDaemonPods(dc)
 	if err != nil {
@@ -455,7 +500,11 @@ func (dm *DaemonManager) syncDaemon(key string) error {
 		dm.expectations.DeleteExpectations(key)
 		return nil
 	}
+<<<<<<< HEAD
 	dc := obj.(*expapi.Daemon)
+=======
+	dc := obj.(*api.Daemon)
+>>>>>>> 3d5ca72... Add daemon manager
 
 	// Don't process a daemon until all its creations and deletions have been processed.
 	// For example if daemon foo asked for 3 new daemon pods in the previous call to manageDaemons,
