@@ -39,8 +39,8 @@ RUN pip install -U docker-compose
 
 RUN go get github.com/tools/godep
 
-RUN mkdir -p /go/src/github.com/GoogleCloudPlatform/kubernetes
-WORKDIR /go/src/github.com/GoogleCloudPlatform/kubernetes
+RUN mkdir -p /go/src/github.com/kubernetes/kubernetes
+WORKDIR /go/src/github.com/kubernetes/kubernetes
 
 COPY ./bin/* /usr/local/bin/
 

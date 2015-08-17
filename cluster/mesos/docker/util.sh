@@ -40,7 +40,7 @@ function cluster::mesos::docker::run_in_docker {
   entrypoint="$1"
   if [[ "${entrypoint}" = "./"* ]]; then
     # relative to project root
-    entrypoint="/go/src/github.com/GoogleCloudPlatform/kubernetes/${entrypoint}"
+    entrypoint="/go/src/github.com/kubernetes/kubernetes/${entrypoint}"
   fi
   shift
   args="$@"
@@ -49,7 +49,7 @@ function cluster::mesos::docker::run_in_docker {
     docker run \
       -d \
       -e "KUBERNETES_PROVIDER=${KUBERNETES_PROVIDER}" \
-      -v "${KUBE_ROOT}:/go/src/github.com/GoogleCloudPlatform/kubernetes" \
+      -v "${KUBE_ROOT}:/go/src/github.com/kubernetes/kubernetes" \
       -v "$(dirname ${KUBECONFIG}):/root/.kube" \
       -v "/var/run/docker.sock:/var/run/docker.sock" \
       --link docker_mesosmaster1_1:mesosmaster1 \
