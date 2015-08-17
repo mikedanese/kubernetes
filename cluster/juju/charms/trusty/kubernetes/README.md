@@ -114,7 +114,7 @@ to interact with the environment.
 # Kubernetes information
 
 - [Kubernetes github project](https://github.com/kubernetes/kubernetes)
-- [Kubernetes issue tracker](https://github.com/kubernetes/kubernetes/issues)
+- [Kubernetes issue tracker](http://issues.k8s.io)
 - [Kubernetes Documenation](https://github.com/kubernetes/kubernetes/tree/master/docs)
 - [Kubernetes releases](https://github.com/kubernetes/kubernetes/releases)
 

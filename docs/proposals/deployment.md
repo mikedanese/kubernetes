@@ -195,8 +195,8 @@ a LastTransitionTime to PodCondition and update kubelet to set Ready to false,
 each time any container crashes. Kubelet will set Ready condition back to true once
 all containers are ready. For containers without a readiness probe, we will
 assume that they are ready as soon as they are up.
-https://github.com/kubernetes/kubernetes/issues/11234 tracks updating kubelet
-and https://github.com/kubernetes/kubernetes/issues/12615 tracks adding
+http://issues.k8s.io/11234 tracks updating kubelet
+and http://issues.k8s.io/12615 tracks adding
 LastTransitionTime to PodCondition.
 
 ## Changing Deployment mid-way
@@ -260,7 +260,7 @@ Apart from the above, we want to add support for the following:
 
 ## References
 
-- https://github.com/kubernetes/kubernetes/issues/1743 has most of the
+- http://issues.k8s.io/1743 has most of the
   discussion that resulted in this proposal.
 
 

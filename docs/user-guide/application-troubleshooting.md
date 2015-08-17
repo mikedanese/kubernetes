@@ -152,7 +152,7 @@ If you misspelled `command` as `commnd` then  will give an error like this:
 
 ```
 I0805 10:43:25.129850   46757 schema.go:126] unknown field: commnd
-I0805 10:43:25.129973   46757 schema.go:129] this may be a false alarm, see https://github.com/kubernetes/kubernetes/issues/6842
+I0805 10:43:25.129973   46757 schema.go:129] this may be a false alarm, see http://issues.k8s.io/6842
 pods/mypod
 ```
 

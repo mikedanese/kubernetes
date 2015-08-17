@@ -201,7 +201,7 @@ or check out the
 [Kubernetes Documentation](https://github.com/kubernetes/kubernetes/tree/master/docs)
 for more details about the Kubernetes concepts and terminology.
 
-Having a problem? Check the [Kubernetes issues database](https://github.com/kubernetes/kubernetes/issues)
+Having a problem? Check the [Kubernetes issues database](http://issues.k8s.io)
 for related issues.
 
 

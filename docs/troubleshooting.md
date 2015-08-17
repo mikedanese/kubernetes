@@ -56,7 +56,7 @@ You may also find the StackOverflow topics relevant
 
 ## Bugs and Feature requests
 
-If you have what looks like a bug, or you would like to make a feature request, please use the [Github issue tracking system](https://github.com/kubernetes/kubernetes/issues).
+If you have what looks like a bug, or you would like to make a feature request, please use the [Github issue tracking system](http://issues.k8s.io).
 
 Before you file an issue, please search existing issues to see if your issue is already covered.
 
