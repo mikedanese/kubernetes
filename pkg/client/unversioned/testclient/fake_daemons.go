@@ -31,15 +31,6 @@ type FakeDaemons struct {
 	Namespace string
 }
 
-const (
-	GetDaemonAction    = "get-daemon"
-	UpdateDaemonAction = "update-daemon"
-	WatchDaemonAction  = "watch-daemon"
-	DeleteDaemonAction = "delete-daemon"
-	ListDaemonAction   = "list-daemons"
-	CreateDaemonAction = "create-daemon"
-)
-
 // Ensure statically that FakeDaemons implements DaemonInterface.
 var _ kClientLib.DaemonInterface = &FakeDaemons{}
 

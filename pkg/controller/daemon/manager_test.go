@@ -23,16 +23,12 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/testapi"
-<<<<<<< HEAD
+	"k8s.io/kubernetes/pkg/client"
+	"k8s.io/kubernetes/pkg/client/cache"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/client/unversioned/cache"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/expapi"
-=======
-	"k8s.io/kubernetes/pkg/client"
-	"k8s.io/kubernetes/pkg/client/cache"
-	"k8s.io/kubernetes/pkg/controller"
->>>>>>> 3d5ca72... Add daemon manager
 	"k8s.io/kubernetes/pkg/securitycontext"
 )
 
@@ -44,11 +40,7 @@ var (
 )
 
 type FakePodControl struct {
-<<<<<<< HEAD
 	daemonSpec    []expapi.Daemon
-=======
-	daemonSpec    []api.Daemon
->>>>>>> 3d5ca72... Add daemon manager
 	deletePodName []string
 	lock          sync.Mutex
 	err           error
@@ -62,11 +54,7 @@ func (f *FakePodControl) CreateReplica(namespace string, spec *api.ReplicationCo
 	return nil
 }
 
-<<<<<<< HEAD
 func (f *FakePodControl) CreateReplicaOnNode(namespace string, daemon *expapi.Daemon, nodeName string) error {
-=======
-func (f *FakePodControl) CreateReplicaOnNode(namespace string, daemon *api.Daemon, nodeName string) error {
->>>>>>> 3d5ca72... Add daemon manager
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	if f.err != nil {
@@ -89,29 +77,17 @@ func (f *FakePodControl) clear() {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	f.deletePodName = []string{}
-<<<<<<< HEAD
 	f.daemonSpec = []expapi.Daemon{}
 }
 
 func newDaemon(name string) *expapi.Daemon {
 	return &expapi.Daemon{
-=======
-	f.daemonSpec = []api.Daemon{}
-}
-
-func newDaemon(name string) *api.Daemon {
-	return &api.Daemon{
->>>>>>> 3d5ca72... Add daemon manager
 		TypeMeta: api.TypeMeta{APIVersion: testapi.Version()},
 		ObjectMeta: api.ObjectMeta{
 			Name:      name,
 			Namespace: api.NamespaceDefault,
 		},
-<<<<<<< HEAD
 		Spec: expapi.DaemonSpec{
-=======
-		Spec: api.DaemonSpec{
->>>>>>> 3d5ca72... Add daemon manager
 			Selector: simpleDaemonLabel,
 			Template: &api.PodTemplateSpec{
 				ObjectMeta: api.ObjectMeta{
@@ -198,11 +174,7 @@ func validateSyncDaemons(t *testing.T, fakePodControl *FakePodControl, expectedC
 	}
 }
 
-<<<<<<< HEAD
 func syncAndValidateDaemons(t *testing.T, manager *DaemonManager, daemon *expapi.Daemon, podControl *FakePodControl, expectedCreates, expectedDeletes int) {
-=======
-func syncAndValidateDaemons(t *testing.T, manager *DaemonManager, daemon *api.Daemon, podControl *FakePodControl, expectedCreates, expectedDeletes int) {
->>>>>>> 3d5ca72... Add daemon manager
 	key, err := controller.KeyFunc(daemon)
 	if err != nil {
 		t.Errorf("Could not get key for daemon.")
