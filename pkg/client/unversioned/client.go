@@ -47,6 +47,8 @@ type Interface interface {
 	PersistentVolumesInterface
 	PersistentVolumeClaimsNamespacer
 	ComponentStatusesInterface
+	DaemonsNamespacer
+	Experimental() ExperimentalInterface
 }
 
 func (c *Client) ReplicationControllers(namespace string) ReplicationControllerInterface {
@@ -118,6 +120,14 @@ type VersionInterface interface {
 	ServerAPIVersions() (*api.APIVersions, error)
 }
 
+func (c *Client) Daemons(namespace string) DaemonInterface {
+	return c.experimental.Daemons(namespace)
+}
+
+func (c *Client) Experimental() ExperimentalInterface {
+	return c.experimental
+}
+
 // APIStatus is exposed by errors that can be converted to an api.Status object
 // for finer grained details.
 type APIStatus interface {
@@ -127,6 +137,7 @@ type APIStatus interface {
 // Client is the implementation of a Kubernetes client.
 type Client struct {
 	*RESTClient
+	experimental *ExperimentalClient
 }
 
 // ServerVersion retrieves and parses the server's version.
