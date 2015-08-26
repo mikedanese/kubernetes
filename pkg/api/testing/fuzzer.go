@@ -119,9 +119,6 @@ func FuzzerFor(t *testing.T, version string, src rand.Source) *fuzz.Fuzzer {
 			c.FuzzNoCustom(j) // fuzz self without calling this function again
 			//j.TemplateRef = nil // this is required for round trip
 		},
-		func(j *api.DaemonSpec, c fuzz.Continue) {
-			c.FuzzNoCustom(j) // fuzz self without calling this function again
-		},
 		func(j *api.List, c fuzz.Continue) {
 			c.FuzzNoCustom(j) // fuzz self without calling this function again
 			// TODO: uncomment when round trip starts from a versioned object

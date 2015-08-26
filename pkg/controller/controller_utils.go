@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"sync/atomic"
+
 	"github.com/golang/glog"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/latest"
@@ -30,7 +32,6 @@ import (
 	"k8s.io/kubernetes/pkg/controller/framework"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/runtime"
-	"sync/atomic"
 )
 
 const (
