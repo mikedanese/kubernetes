@@ -162,6 +162,10 @@ func (c *Fake) Namespaces() client.NamespaceInterface {
 	return &FakeNamespaces{Fake: c}
 }
 
+func (c *Fake) Experimental() client.ExperimentalInterface {
+	panic("unimplemented")
+}
+
 func (c *Fake) ServerVersion() (*version.Info, error) {
 	action := ActionImpl{}
 	action.Verb = "get"
