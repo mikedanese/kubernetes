@@ -24,6 +24,7 @@ import (
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/expapi"
 	"k8s.io/kubernetes/pkg/fields"
+	"k8s.io/kubernetes/pkg/kubectl"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/util/wait"
 
@@ -132,7 +133,7 @@ func testDaemons(f *Framework) {
 	retryInterval := 5 * time.Second
 
 	By(fmt.Sprintf("Creating simple daemon %s", simpleDaemonName))
-	_, err := c.Daemons(ns).Create(&expapi.Daemon{
+	simpleDaemon, err := c.Daemons(ns).Create(&expapi.Daemon{
 		ObjectMeta: api.ObjectMeta{
 			Name: simpleDaemonName,
 		},
@@ -154,6 +155,15 @@ func testDaemons(f *Framework) {
 		},
 	})
 	Expect(err).NotTo(HaveOccurred())
+	defer func() {
+		By(fmt.Sprintf("Check that reaper kills all daemon pods for %s", simpleDaemon.Name))
+		daemonReaper, err := kubectl.ReaperFor("Daemon", c, nil)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = daemonReaper.Stop(ns, simpleDaemon.Name, 0, nil)
+		Expect(err).NotTo(HaveOccurred())
+		err = wait.Poll(retryInterval, retryTimeout, checkRunningOnNoNodes(f, label))
+		Expect(err).NotTo(HaveOccurred(), "error waiting for daemon pod to be reaped")
+	}()
 
 	By("Check that daemon pods launch on every node of the cluster.")
 	Expect(err).NotTo(HaveOccurred())
@@ -176,7 +186,7 @@ func testDaemons(f *Framework) {
 	complexLabel := map[string]string{"name": complexDaemonName}
 	nodeSelector := map[string]string{"color": "blue"}
 	By(fmt.Sprintf("Creating daemon with a node selector %s", complexDaemonName))
-	_, err = c.Daemons(ns).Create(&expapi.Daemon{
+	complexDaemon, err := c.Daemons(ns).Create(&expapi.Daemon{
 		ObjectMeta: api.ObjectMeta{
 			Name: complexDaemonName,
 		},
@@ -200,6 +210,15 @@ func testDaemons(f *Framework) {
 		},
 	})
 	Expect(err).NotTo(HaveOccurred())
+	defer func() {
+		By(fmt.Sprintf("Check that reaper kills all daemon pods for %s", complexDaemon.Name))
+		daemonReaper, err := kubectl.ReaperFor("Daemon", c, nil)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = daemonReaper.Stop(ns, complexDaemon.Name, 0, nil)
+		Expect(err).NotTo(HaveOccurred())
+		err = wait.Poll(retryInterval, retryTimeout, checkRunningOnNoNodes(f, complexLabel))
+		Expect(err).NotTo(HaveOccurred(), "error waiting for daemon pod to be reaped")
+	}()
 
 	By(fmt.Sprintf("Initially, daemon pods should not be running on any nodes."))
 	err = wait.Poll(retryInterval, retryTimeout, checkRunningOnNoNodes(f, complexLabel))
