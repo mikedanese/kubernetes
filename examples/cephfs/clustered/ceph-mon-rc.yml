@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    run: ceph-mon
+    ceph: cluster
+  name: ceph-mon
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: ceph-mon
+        ceph: cluster
+    spec:
+      containers:
+      - name: etcd
+        image: gcr.io/mikedanese-k8s/ceph
+        env:
+          - name: MON_IP_AUTO_DETECT
+            value: "4"
+          - name: CEPH_PUBLIC_NETWORK
+            value: 10.244.0.0/16
+          - name: KV_TYPE
+            value: etcd
+          - name: KV_IP
+            value: 10.0.168.192
+          - name: KV_PORT
+            value: "2379"
+        args:
+          - mon

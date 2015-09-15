@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: DaemonSet
+metadata:
+  labels:
+    run: ceph-osd
+    ceph: cluster
+  name: ceph-osd
+spec:
+  template:
+    metadata:
+      labels:
+        run: ceph-osd
+        ceph: cluster
+    spec:
+      privileged: true
+      containers:
+      - name: etcd
+        image: gcr.io/mikedanese-k8s/ceph
+        args:
+        - osd_ceph_disk_activate
+        env:
+        - name: KV_TYPE
+          value: etcd
+        - name: KV_IP
+          value: 10.0.168.192
+        - name: KV_PORT
+          value: "2379"
+        - name: OSD_DEVICE
+          value: /dev/sdb
+        - name: OSD_FORCE_ZAP
+          value: "1"
+        volumeMounts:
+        - mountPath: /dev
+          name: dev
+        - mountPath: /var/lib/ceph/
+          name: varlibceph
+        securityContext:
+          privileged: true
+      volumes:
+      - hostPath:
+          path: /dev
+        name: dev
+      - hostPath:
+          path: /var/lib/ceph/
+        name: varlibceph

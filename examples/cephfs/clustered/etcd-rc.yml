@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    run: etcd
+    ceph: cluster
+  name: ceph-etcd
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: etcd
+        ceph: cluster
+    spec:
+      containers:
+      - image: gcr.io/google_containers/etcd:2.0.12
+        args:
+          - /bin/sh
+          - -c
+          - "/usr/local/bin/etcd -advertise-client-urls http://$(hostname -i):2379 -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001"
+        name: etcd
