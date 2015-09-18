@@ -19,6 +19,7 @@ package meta
 import (
 	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/types"
+	"k8s.io/kubernetes/pkg/util"
 )
 
 // VersionInterfaces contains the interfaces one should use for dealing with types of a particular version.
@@ -46,6 +47,8 @@ type Interface interface {
 	SetUID(uid types.UID)
 	ResourceVersion() string
 	SetResourceVersion(version string)
+	CreationTimestamp() util.Time
+	SetCreationTimestamp(time util.Time)
 	SelfLink() string
 	SetSelfLink(selfLink string)
 	Labels() map[string]string
@@ -83,6 +86,9 @@ type MetadataAccessor interface {
 
 	GenerateName(obj runtime.Object) (string, error)
 	SetGenerateName(obj runtime.Object, name string) error
+
+	CreationTimestamp(obj runtime.Object) (util.Time, error)
+	SetCreationTimestamp(obj runtime.Object, time util.Time) error
 
 	UID(obj runtime.Object) (types.UID, error)
 	SetUID(obj runtime.Object, uid types.UID) error

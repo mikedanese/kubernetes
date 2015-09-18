@@ -218,7 +218,7 @@ func (dsc *DaemonSetsController) getPodDaemonSet(pod *api.Pod) *experimental.Dae
 	// sets overlap, sort by creation timestamp, subsort by name, then pick
 	// the first.
 	glog.Errorf("user error! more than one daemon is selecting pods with labels: %+v", pod.Labels)
-	sort.Sort(byCreationTimestamp(sets))
+	sort.Sort(controller.ByCreationTimestamp(sets))
 	return &sets[0]
 }
 
@@ -481,17 +481,4 @@ func (dsc *DaemonSetsController) syncDaemonSet(key string) error {
 
 	dsc.updateDaemonSetStatus(ds)
 	return nil
-}
-
-// byCreationTimestamp sorts a list by creation timestamp, using their names as a tie breaker.
-type byCreationTimestamp []experimental.DaemonSet
-
-func (o byCreationTimestamp) Len() int      { return len(o) }
-func (o byCreationTimestamp) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
-
-func (o byCreationTimestamp) Less(i, j int) bool {
-	if o[i].CreationTimestamp.Equal(o[j].CreationTimestamp) {
-		return o[i].Name < o[j].Name
-	}
-	return o[i].CreationTimestamp.Before(o[j].CreationTimestamp)
 }

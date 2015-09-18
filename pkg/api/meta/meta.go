@@ -23,6 +23,7 @@ import (
 	"k8s.io/kubernetes/pkg/conversion"
 	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/types"
+	"k8s.io/kubernetes/pkg/util"
 )
 
 // Accessor takes an arbitrary object pointer and returns meta.Interface.
@@ -280,19 +281,37 @@ func (resourceAccessor) SetResourceVersion(obj runtime.Object, version string) e
 	return nil
 }
 
+func (resourceAccessor) CreationTimestamp(obj runtime.Object) (util.Time, error) {
+	accessor, err := Accessor(obj)
+	if err != nil {
+		return util.Time{}, err
+	}
+	return accessor.CreationTimestamp(), nil
+}
+
+func (resourceAccessor) SetCreationTimestamp(obj runtime.Object, time util.Time) error {
+	accessor, err := Accessor(obj)
+	if err != nil {
+		return err
+	}
+	accessor.SetCreationTimestamp(time)
+	return nil
+}
+
 // genericAccessor contains pointers to strings that can modify an arbitrary
 // struct and implements the Accessor interface.
 type genericAccessor struct {
-	namespace       *string
-	name            *string
-	generateName    *string
-	uid             *types.UID
-	apiVersion      *string
-	kind            *string
-	resourceVersion *string
-	selfLink        *string
-	labels          *map[string]string
-	annotations     *map[string]string
+	namespace         *string
+	name              *string
+	generateName      *string
+	uid               *types.UID
+	apiVersion        *string
+	kind              *string
+	resourceVersion   *string
+	creationTimestamp *util.Time
+	selfLink          *string
+	labels            *map[string]string
+	annotations       *map[string]string
 }
 
 func (a genericAccessor) Namespace() string {
@@ -373,6 +392,14 @@ func (a genericAccessor) ResourceVersion() string {
 
 func (a genericAccessor) SetResourceVersion(version string) {
 	*a.resourceVersion = version
+}
+
+func (a genericAccessor) CreationTimestamp() util.Time {
+	return *a.creationTimestamp
+}
+
+func (a genericAccessor) SetCreationTimestamp(time util.Time) {
+	*a.creationTimestamp = time
 }
 
 func (a genericAccessor) SelfLink() string {

@@ -25,6 +25,7 @@ import (
 	"github.com/golang/glog"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/latest"
+	"k8s.io/kubernetes/pkg/api/meta"
 	"k8s.io/kubernetes/pkg/api/validation"
 	"k8s.io/kubernetes/pkg/client/cache"
 	"k8s.io/kubernetes/pkg/client/record"
@@ -346,4 +347,22 @@ func FilterActivePods(pods []api.Pod) []*api.Pod {
 		}
 	}
 	return result
+}
+
+// ByCreationTimestamp sorts a list by creation timestamp, using their names as a tie breaker.
+type ByCreationTimestamp []api.Object
+
+func (o ByCreationTimestamp) Len() int      { return len(o) }
+func (o ByCreationTimestamp) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
+
+func (o ByCreationTimestamp) Less(i, j int) bool {
+	ai, err := meta.Accessor(o[i])
+	aj, err := meta.Accessor(o[j])
+	if err != nil {
+		panic("this is a programmer error")
+	}
+	if ai.CreationTimestamp().Equal(aj.CreationTimestamp()) {
+		return ai.Name() < aj.Name()
+	}
+	return ai.CreationTimestamp().Before(aj.CreationTimestamp())
 }
