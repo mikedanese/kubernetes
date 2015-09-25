@@ -159,6 +159,7 @@ func newTestDockerManager() (*dockertools.DockerManager, *dockertools.FakeDocker
 }
 
 func TestCNIPlugin(t *testing.T) {
+	t.Skip()
 	// install some random plugin
 	pluginName := fmt.Sprintf("test%d", rand.Intn(1000))
 	vendorName := fmt.Sprintf("test_vendor%d", rand.Intn(1000))
