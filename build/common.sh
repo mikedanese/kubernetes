@@ -97,6 +97,7 @@ readonly KUBE_DOCKER_WRAPPED_BINARIES=(
   kube-apiserver
   kube-controller-manager
   kube-scheduler
+  kube-proxy
 )
 
 # The set of addons images that should be prepopulated
