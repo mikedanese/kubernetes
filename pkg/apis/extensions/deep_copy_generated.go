@@ -1042,9 +1042,9 @@ func deepCopy_extensions_DeploymentList(in DeploymentList, out *DeploymentList, 
 func deepCopy_extensions_DeploymentSpec(in DeploymentSpec, out *DeploymentSpec, c *conversion.Cloner) error {
 	out.Replicas = in.Replicas
 	if in.Selector != nil {
-		out.Selector = make(map[string]string)
-		for key, val := range in.Selector {
-			out.Selector[key] = val
+		out.Selector = new(PodSelector)
+		if err := deepCopy_extensions_PodSelector(*in.Selector, out.Selector, c); err != nil {
+			return err
 		}
 	} else {
 		out.Selector = nil

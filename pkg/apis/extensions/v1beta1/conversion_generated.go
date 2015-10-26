@@ -2388,9 +2388,9 @@ func autoconvert_extensions_DeploymentSpec_To_v1beta1_DeploymentSpec(in *extensi
 		return err
 	}
 	if in.Selector != nil {
-		out.Selector = make(map[string]string)
-		for key, val := range in.Selector {
-			out.Selector[key] = val
+		out.Selector = new(PodSelector)
+		if err := convert_extensions_PodSelector_To_v1beta1_PodSelector(in.Selector, out.Selector, s); err != nil {
+			return err
 		}
 	} else {
 		out.Selector = nil
@@ -3379,9 +3379,9 @@ func autoconvert_v1beta1_DeploymentSpec_To_extensions_DeploymentSpec(in *Deploym
 	}
 	// in.Replicas has no peer in out
 	if in.Selector != nil {
-		out.Selector = make(map[string]string)
-		for key, val := range in.Selector {
-			out.Selector[key] = val
+		out.Selector = new(extensions.PodSelector)
+		if err := convert_v1beta1_PodSelector_To_extensions_PodSelector(in.Selector, out.Selector, s); err != nil {
+			return err
 		}
 	} else {
 		out.Selector = nil
