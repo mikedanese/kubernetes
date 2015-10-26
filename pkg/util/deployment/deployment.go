@@ -28,11 +28,15 @@ import (
 	"k8s.io/kubernetes/pkg/util"
 )
 
-// Returns the old RCs targetted by the given Deployment.
+// Returns the old RCs targeted by the given Deployment.
 func GetOldRCs(deployment extensions.Deployment, c client.Interface) ([]*api.ReplicationController, error) {
 	namespace := deployment.ObjectMeta.Namespace
 	// 1. Find all pods whose labels match deployment.Spec.Selector
-	podList, err := c.Pods(namespace).List(labels.SelectorFromSet(deployment.Spec.Selector), fields.Everything())
+	podSelector, err := extensions.PodSelectorAsSelector(deployment.Spec.Selector)
+	if err != nil {
+		return nil, err
+	}
+	podList, err := c.Pods(namespace).List(podSelector, fields.Everything())
 	if err != nil {
 		return nil, fmt.Errorf("error listing pods: %v", err)
 	}
