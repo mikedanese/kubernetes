@@ -166,6 +166,14 @@ func (le *LeaderElector) Run() {
 	close(stop)
 }
 
+func RunOrDie(lec LeaderElectionConfig) {
+	le, err := NewLeaderElector(lec)
+	if err != nil {
+		panic(err)
+	}
+	le.Run()
+}
+
 // acquire loops calling tryAcquireOrRenew and returns immediately when tryAcquireOrRenew succeeds.
 func (le *LeaderElector) acquire() {
 	stop := make(chan struct{})

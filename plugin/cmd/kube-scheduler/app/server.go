@@ -25,8 +25,10 @@ import (
 	"net/http/pprof"
 	"os"
 	"strconv"
+	"time"
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/client/leaderelection"
 	"k8s.io/kubernetes/pkg/client/record"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
@@ -153,10 +155,33 @@ func (s *SchedulerServer) Run(_ []string) error {
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(kubeClient.Events(""))
 
-	sched := scheduler.New(config)
-	sched.Run()
-
-	select {}
+	id, err := os.Hostname()
+	if err != nil {
+		return err
+	}
+	leaderelection.RunOrDie(leaderelection.LeaderElectionConfig{
+		EndpointsMeta: api.ObjectMeta{
+			Namespace: "kube-system",
+			Name:      "kube-scheduler",
+		},
+		Client:        kubeClient,
+		Identity:      id,
+		EventRecorder: config.Recorder,
+		LeaseDuration: 15 * time.Second,
+		RenewDeadline: 10 * time.Second,
+		RetryPeriod:   2 * time.Second,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: func(_ <-chan struct{}) {
+				sched := scheduler.New(config)
+				sched.Run()
+				select {}
+			},
+			OnStoppedLeading: func() {
+				glog.Fatalf("lost master")
+			},
+		},
+	})
+	return fmt.Errorf("this is unreachable")
 }
 
 func (s *SchedulerServer) createConfig(configFactory *factory.ConfigFactory) (*scheduler.Config, error) {
