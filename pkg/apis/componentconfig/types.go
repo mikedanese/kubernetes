@@ -62,3 +62,175 @@ const (
 	ProxyModeUserspace ProxyMode = "userspace"
 	ProxyModeIPTables  ProxyMode = "iptables"
 )
+
+type KubeAPIServerConfiguration struct {
+	// insecurePort is the port on which to serve unsecured, unauthenticated
+	// access. Default 8080. It is assumed that firewall rules are set up
+	// such that this port is not reachable from outside of the cluster and
+	// that port 443 on the cluster's public address is proxied to this port.
+	// This is performed by nginx in the default setup.
+	InsecurePort int `json:"insecurePort"`
+	// insecureBindAddress is the IP address on which to serve the
+	// insecurePort (set to 0.0.0.0 for all interfaces).
+	InsecureBindAddress ip `json:"insecureBindAddress"`
+	// bindAddress is the IP address on which to listen for the securePort.
+	// The associated interface(s) must be reachable by the rest of the
+	// cluster, and by CLI/web clients.
+	BindAddress ip `json:"bindAddress"`
+	// advertiseAddress is the IP address on which to advertise the apiserver
+	// to members of the cluster. This address must be reachable by the rest
+	// of the cluster. If blank, the --bind-address will be used.
+	AdvertiseAddress ip `json:"advertiseAddress"`
+	// securePort is the port on which to serve HTTPS with authentication and
+	// authorization.
+	SecurePort int `json:"securePort"`
+	// tLSCertFile is file containing x509 Certificate for HTTPS.  (CA cert,
+	// if any, concatenated after server cert). If HTTPS serving is enabled,
+	// and tlsCertFile and tlsPrivateKeyFile are not provided, a self-signed
+	// certificate and key are generated for the public address and saved to
+	// /var/run/kubernetes.
+	TLSCertFile string `json:"tLSCertFile"`
+	// tLSPrivateKeyFile is file containing x509 private key matching tlsCertFile.
+	TLSPrivateKeyFile string `json:"tLSPrivateKeyFile"`
+	// certDirectory is the directory where the TLS certs are located (by
+	// default /var/run/kubernetes). If --tls-cert-file and tlsPrivateKeyFile
+	// are provided, this flag will be ignored.
+	CertDirectory string `json:"certDirectory"`
+	// storageVersions is the versions to store resources with. Different
+	// groups may be stored in different versions. Specified in the format
+	// "group1/version1,group2/version2...". This flag expects a complete
+	// list of storage versions of ALL groups registered in the server. It
+	// defaults to a list of preferred versions of all registered groups,
+	// which is derived from the KUBE_API_VERSIONS environment variable.
+	StorageVersions string `json:"storageVersions"`
+	// cloudProvider is the provider for cloud services.  Empty string for
+	// no provider.
+	CloudProvider string `json:"cloudProvider"`
+	// cloudConfigFile is the path to the cloud provider configuration file.
+	// Empty string for no configuration file.
+	CloudConfigFile string `json:"cloudConfigFile"`
+	// eventTTL is Amount of time to retain events. Default 1 hour.
+	EventTTL duration `json:"eventTTL"`
+	// basicAuthFile is If set, the file that will be used to admit requests
+	// to the secure port of the API server via http basic authentication.
+	BasicAuthFile string `json:"basicAuthFile"`
+	// clientCAFile is If set, any request presenting a client certificate
+	// signed by one of the authorities in the client-ca-file is authenticated
+	// with an identity corresponding to the CommonName of the client certificate.
+	ClientCAFile string `json:"clientCAFile"`
+	// tokenAuthFile is If set, the file that will be used to secure the
+	// secure port of the API server via token authentication.
+	TokenAuthFile string `json:"tokenAuthFile"`
+	// oIDCIssuerURL is The URL of the OpenID issuer, only HTTPS scheme will
+	// be accepted. If set, it will be used to verify the OIDC JSON Web
+	// Token (JWT)
+	OIDCIssuerURL string `json:"oIDCIssuerURL"`
+	// oIDCClientID is The client ID for the OpenID Connect client, must be
+	// set if oidc-issuer-url is set
+	OIDCClientID string `json:"oIDCClientID"`
+	// oIDCCAFile is If set, the OpenID server's certificate will be verified
+	// by one of the authorities in the oidc-ca-file, otherwise the host's
+	// root CA set will be used
+	OIDCCAFile string `json:"oIDCCAFile"`
+	// oIDCUsernameClaim is The OpenID claim to use as the user name. Note
+	// that claims other than the default ('sub') is not guaranteed to be
+	// unique and immutable. This flag is experimental, please see the
+	// authentication documentation for further details.
+	OIDCUsernameClaim string `json:"oIDCUsernameClaim"`
+	// serviceAccountKeyFile is File containing PEM-encoded x509 RSA private
+	// or public key, used to verify ServiceAccount tokens. If unspecified,
+	// tlsPrivateKeyFile is used.
+	ServiceAccountKeyFile string `json:"serviceAccountKeyFile"`
+	// serviceAccountLookup is If true, validate ServiceAccount tokens exist
+	// in etcd as part of authentication.
+	ServiceAccountLookup bool `json:"serviceAccountLookup"`
+	// keystoneURL is If passed, activates the keystone authentication plugin
+	KeystoneURL string `json:"keystoneURL"`
+	// authorizationMode is Ordered list of plug-ins to do authorization on
+	// secure port. Comma-delimited list of AuthorizationModeChoices
+	AuthorizationMode string `json:"authorizationMode"`
+	// authorizationPolicyFile is File with authorization policy in csv format,
+	// used with authorizationMode=ABAC, on the secure port.
+	AuthorizationPolicyFile string `json:"authorizationPolicyFile"`
+	// admissionControl is Ordered list of plug-ins to do admission control
+	// of resources into cluster. Comma-delimited list of: AdmissionControls
+	AdmissionControl string `json:"admissionControl"`
+	// admissionControlConfigFile is File with admission control configuration.
+	AdmissionControlConfigFile string `json:"admissionControlConfigFile"`
+	// etcdServerList is List of etcd servers to watch (http://ip:port),
+	// comma separated. Mutually exclusive with -etcd-config
+	EtcdServerList stringslice `json:"etcdServerList"`
+	// etcdServersOverrides is Per-resource etcd servers overrides, comma
+	// separated. The individual override format: group/resource#servers,
+	// where servers are http://ip:port, semicolon separated.
+	EtcdServersOverrides stringslice `json:"etcdServersOverrides"`
+	// etcdPathPrefix is The prefix for all resource paths in etcd.
+	EtcdPathPrefix string `json:"etcdPathPrefix"`
+	// corsAllowedOriginList is List of allowed origins for CORS, comma
+	// separated.  An allowed origin can be a regular expression to support
+	// subdomain matching.  If this list is empty CORS will not be enabled.
+	CorsAllowedOriginList stringslice `json:"corsAllowedOriginList"`
+	// allowPrivileged is If true, allow privileged containers.
+	AllowPrivileged bool `json:"allowPrivileged"`
+	// serviceClusterIPRange is A CIDR notation IP range from which to assign
+	// service cluster IPs. This must not overlap with any IP ranges assigned
+	// to nodes for pods.
+	ServiceClusterIPRange ipnet `json:"serviceClusterIPRange"`
+	// serviceNodePort is a port range to reserve for services with NodePort
+	// visibility.  Example: '30000-32767'.  Inclusive at both ends of the range.
+	ServiceNodePortRange map[string]string `json:"serviceNodePortRange`
+	// masterServiceNamespace is The namespace from which the kubernetes master
+	// services should be injected into pods
+	MasterServiceNamespace string `json:"masterServiceNamespace"`
+	// masterCount is The number of apiservers running in the cluster
+	MasterCount int `json:"masterCount"`
+	// runtimeConfig is a set of key=value pairs that describe runtime configuration
+	// that may be passed to apiserver. apis/<groupVersion> key can be used to
+	// turn on/off specific api versions. apis/<groupVersion>/<resource> can
+	// be used to turn on/off specific resources. api/all and api/legacy are
+	// special keys to control all and legacy api versions respectively.
+	RuntimeConfig map[string]string `json:"runtimeConfig"`
+	// enableProfiling is Enable profiling via web interface host:port/debug/pprof/
+	EnableProfiling bool `json:"enableProfiling"`
+	// enableWatchCache is Enable watch caching in the apiserver
+	EnableWatchCache bool `json:"enableWatchCache"`
+	// externalHost is The hostname to use when generating externalized URLs
+	// for this master (e.g. Swagger API Docs.)
+	ExternalHost string `json:"externalHost"`
+	// maxRequestsInFlight is The maximum number of requests in flight at a
+	// given time.  When the server exceeds this, it rejects requests.
+	// Zero for no limit.
+	MaxRequestsInFlight int `json:"maxRequestsInFlight"`
+	// minRequestTimeout is An optional field indicating the minimum number
+	// of seconds a handler must keep a request open before timing it out.
+	// Currently only honored by the watch request handler, which picks a
+	// randomized value above this number as the connection timeout, to
+	// spread out load.
+	MinRequestTimeout int `json:"minRequestTimeout"`
+	// longRunningRequestRE is A regular expression matching long running
+	// requests which should be excluded from maximum inflight request handling.
+	LongRunningRequestRE string `json:"longRunningRequestRE"`
+	// sshUser is If non-empty, use secure SSH proxy to the nodes, using this
+	// user name
+	SSHUser string `json:"sshUser"`
+	// sshKeyfile is If non-empty, use secure SSH proxy to the nodes, using
+	// this user keyfile
+	SSHKeyfile string `json:"sshKeyfile"`
+	// maxConnectionBytesPerSec is If non-zero, throttle each user connection
+	// to this number of bytes/sec.  Currently only applies to long-running
+	// requests
+	MaxConnectionBytesPerSec int64 `json:"maxConnectionBytesPerSec"`
+
+	// !!!!! Uh oh: 	fs.BoolVar(&s.KubeletConfig.EnableHttps, "kubelet-https", s.KubeletConfig.EnableHttps, "Use https for kubelet connections"), []
+	// !!!!! Uh oh: 	fs.DurationVar(&s.KubeletConfig.HTTPTimeout, "kubelet-timeout", s.KubeletConfig.HTTPTimeout, "Timeout for kubelet operations"), []
+	// !!!!! Uh oh: 	fs.StringVar(&s.KubeletConfig.CertFile, "kubelet-client-certificate", s.KubeletConfig.CertFile, "Path to a client cert file for TLS."), []
+	// !!!!! Uh oh: 	fs.StringVar(&s.KubeletConfig.KeyFile, "kubelet-client-key", s.KubeletConfig.KeyFile, "Path to a client key file for TLS."), []
+	// !!!!! Uh oh: 	fs.StringVar(&s.KubeletConfig.CAFile, "kubelet-certificate-authority", s.KubeletConfig.CAFile, "Path to a cert. file for the certificate authority."), []
+
+	// kubernetesServiceNodePort is If non-zero, the Kubernetes master service
+	// (which apiserver creates/maintains) will be of type NodePort, using
+	// this as the value of the port. If zero, the Kubernetes master service
+	// will be of type ClusterIP.
+	KubernetesServiceNodePort int `json:"kubernetesServiceNodePort"`
+	// !!!!! Uh oh: 	fs.BoolVar(&validation.RepairMalformedUpdates, "repair-malformed-updates", true, "If true, server will do its best to fix the update request to pass the validation, e.g., setting empty UID in update request to its existing value. This flag can be turned off after we fix all the clients that send malformed updates."), []
+}
