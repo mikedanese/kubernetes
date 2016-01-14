@@ -114,6 +114,31 @@ func TestSyncEndpointsItemsPreserveNoSelector(t *testing.T) {
 	endpointsHandler.ValidateRequestCount(t, 0)
 }
 
+func TestSyncEndpointsHeadlessServiceWithNoDeclaredPorts(t *testing.T) {
+	ns := api.NamespaceDefault
+	testServer, endpointsHandler := makeTestServer(t, ns,
+		serverResponse{http.StatusOK, &api.Endpoints{
+			ObjectMeta: api.ObjectMeta{
+				Name:            "foo",
+				Namespace:       ns,
+				ResourceVersion: "1",
+			},
+			Subsets: []api.EndpointSubset{{
+				Addresses: []api.EndpointAddress{{IP: "6.7.8.9"}},
+			}},
+		}})
+	// TODO: Uncomment when fix #19254
+	// defer testServer.Close()
+	client := client.NewOrDie(&client.Config{Host: testServer.URL, GroupVersion: testapi.Default.GroupVersion()})
+	endpoints := NewEndpointController(client, controller.NoResyncPeriodFunc)
+	endpoints.serviceStore.Store.Add(&api.Service{
+		ObjectMeta: api.ObjectMeta{Name: "foo", Namespace: ns},
+		Spec:       api.ServiceSpec{},
+	})
+	endpoints.syncService(ns + "/foo")
+	endpointsHandler.ValidateRequestCount(t, 0)
+}
+
 func TestCheckLeftoverEndpoints(t *testing.T) {
 	ns := api.NamespaceDefault
 	// Note that this requests *all* endpoints, therefore the NamespaceAll

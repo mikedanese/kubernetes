@@ -296,6 +296,13 @@ func (e *EndpointController) syncService(key string) {
 	for i := range pods.Items {
 		pod := &pods.Items[i]
 
+		epa := api.EndpointAddress{IP: pod.Status.PodIP, TargetRef: &api.ObjectReference{
+			Kind:            "Pod",
+			Namespace:       pod.ObjectMeta.Namespace,
+			Name:            pod.ObjectMeta.Name,
+			UID:             pod.ObjectMeta.UID,
+			ResourceVersion: pod.ObjectMeta.ResourceVersion,
+		}}
 		for i := range service.Spec.Ports {
 			servicePort := &service.Spec.Ports[i]
 
@@ -316,13 +323,7 @@ func (e *EndpointController) syncService(key string) {
 			}
 
 			epp := api.EndpointPort{Name: portName, Port: portNum, Protocol: portProto}
-			epa := api.EndpointAddress{IP: pod.Status.PodIP, TargetRef: &api.ObjectReference{
-				Kind:            "Pod",
-				Namespace:       pod.ObjectMeta.Namespace,
-				Name:            pod.ObjectMeta.Name,
-				UID:             pod.ObjectMeta.UID,
-				ResourceVersion: pod.ObjectMeta.ResourceVersion,
-			}}
+
 			if api.IsPodReady(pod) {
 				subsets = append(subsets, api.EndpointSubset{
 					Addresses: []api.EndpointAddress{epa},
@@ -333,6 +334,18 @@ func (e *EndpointController) syncService(key string) {
 				subsets = append(subsets, api.EndpointSubset{
 					NotReadyAddresses: []api.EndpointAddress{epa},
 					Ports:             []api.EndpointPort{epp},
+				})
+			}
+		}
+		if len(service.Spec.Ports) == 0 && service.Spec.ClusterIP == "" {
+			if api.IsPodReady(pod) {
+				subsets = append(subsets, api.EndpointSubset{
+					Addresses: []api.EndpointAddress{epa},
+				})
+			} else {
+				glog.V(5).Infof("Pod is out of service: %v/%v", pod.Namespace, pod.Name)
+				subsets = append(subsets, api.EndpointSubset{
+					NotReadyAddresses: []api.EndpointAddress{epa},
 				})
 			}
 		}
