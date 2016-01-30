@@ -66,6 +66,134 @@ func Convert_componentconfig_KubeProxyConfiguration_To_v1alpha1_KubeProxyConfigu
 	return autoConvert_componentconfig_KubeProxyConfiguration_To_v1alpha1_KubeProxyConfiguration(in, out, s)
 }
 
+func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfiguration(in *componentconfig.KubeletConfiguration, out *KubeletConfiguration, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*componentconfig.KubeletConfiguration))(in)
+	}
+	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
+		return err
+	}
+	out.Config = in.Config
+	if err := s.Convert(&in.SyncFrequency, &out.SyncFrequency, 0); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.FileCheckFrequency, &out.FileCheckFrequency, 0); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.HTTPCheckFrequency, &out.HTTPCheckFrequency, 0); err != nil {
+		return err
+	}
+	out.ManifestURL = in.ManifestURL
+	out.ManifestURLHeader = in.ManifestURLHeader
+	if err := api.Convert_bool_To_bool_ref(&in.EnableServer, &out.EnableServer, s); err != nil {
+		return err
+	}
+	out.Address = in.Address
+	out.Port = uint32(in.Port)
+	out.ReadOnlyPort = uint32(in.ReadOnlyPort)
+	out.TLSCertFile = in.TLSCertFile
+	out.TLSPrivateKeyFile = in.TLSPrivateKeyFile
+	out.CertDirectory = in.CertDirectory
+	out.HostnameOverride = in.HostnameOverride
+	out.PodInfraContainerImage = in.PodInfraContainerImage
+	out.DockerEndpoint = in.DockerEndpoint
+	out.RootDirectory = in.RootDirectory
+	if err := api.Convert_bool_To_bool_ref(&in.AllowPrivileged, &out.AllowPrivileged, s); err != nil {
+		return err
+	}
+	out.HostNetworkSources = in.HostNetworkSources
+	out.HostPIDSources = in.HostPIDSources
+	out.HostIPCSources = in.HostIPCSources
+	out.RegistryPullQPS = in.RegistryPullQPS
+	out.RegistryBurst = int64(in.RegistryBurst)
+	out.EventRecordQPS = in.EventRecordQPS
+	out.EventBurst = int64(in.EventBurst)
+	if err := api.Convert_bool_To_bool_ref(&in.EnableDebuggingHandlers, &out.EnableDebuggingHandlers, s); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.MinimumGCAge, &out.MinimumGCAge, 0); err != nil {
+		return err
+	}
+	out.MaxPerPodContainerCount = int64(in.MaxPerPodContainerCount)
+	out.MaxContainerCount = int64(in.MaxContainerCount)
+	out.CAdvisorPort = uint32(in.CAdvisorPort)
+	out.HealthzPort = int32(in.HealthzPort)
+	out.HealthzBindAddress = in.HealthzBindAddress
+	out.OOMScoreAdj = int32(in.OOMScoreAdj)
+	if err := api.Convert_bool_To_bool_ref(&in.RegisterNode, &out.RegisterNode, s); err != nil {
+		return err
+	}
+	out.ClusterDomain = in.ClusterDomain
+	out.MasterServiceNamespace = in.MasterServiceNamespace
+	out.ClusterDNS = in.ClusterDNS
+	if err := s.Convert(&in.StreamingConnectionIdleTimeout, &out.StreamingConnectionIdleTimeout, 0); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.NodeStatusUpdateFrequency, &out.NodeStatusUpdateFrequency, 0); err != nil {
+		return err
+	}
+	out.ImageGCHighThresholdPercent = int32(in.ImageGCHighThresholdPercent)
+	out.ImageGCLowThresholdPercent = int32(in.ImageGCLowThresholdPercent)
+	out.LowDiskSpaceThresholdMB = int64(in.LowDiskSpaceThresholdMB)
+	out.NetworkPluginName = in.NetworkPluginName
+	out.NetworkPluginDir = in.NetworkPluginDir
+	out.VolumePluginDir = in.VolumePluginDir
+	out.CloudProvider = in.CloudProvider
+	out.CloudConfigFile = in.CloudConfigFile
+	out.ResourceContainer = in.ResourceContainer
+	out.CgroupRoot = in.CgroupRoot
+	out.ContainerRuntime = in.ContainerRuntime
+	out.RktPath = in.RktPath
+	out.RktStage1Image = in.RktStage1Image
+	out.SystemContainer = in.SystemContainer
+	if err := api.Convert_bool_To_bool_ref(&in.ConfigureCBR0, &out.ConfigureCBR0, s); err != nil {
+		return err
+	}
+	out.MaxPods = int32(in.MaxPods)
+	out.DockerExecHandlerName = in.DockerExecHandlerName
+	out.PodCIDR = in.PodCIDR
+	out.ResolverConfig = in.ResolverConfig
+	if err := api.Convert_bool_To_bool_ref(&in.CPUCFSQuota, &out.CPUCFSQuota, s); err != nil {
+		return err
+	}
+	if err := api.Convert_bool_To_bool_ref(&in.Containerized, &out.Containerized, s); err != nil {
+		return err
+	}
+	out.MaxOpenFiles = in.MaxOpenFiles
+	if err := api.Convert_bool_To_bool_ref(&in.ReconcileCIDR, &out.ReconcileCIDR, s); err != nil {
+		return err
+	}
+	if err := api.Convert_bool_To_bool_ref(&in.RegisterSchedulable, &out.RegisterSchedulable, s); err != nil {
+		return err
+	}
+	out.KubeAPIQPS = in.KubeAPIQPS
+	out.KubeAPIBurst = int32(in.KubeAPIBurst)
+	if err := api.Convert_bool_To_bool_ref(&in.SerializeImagePulls, &out.SerializeImagePulls, s); err != nil {
+		return err
+	}
+	if err := api.Convert_bool_To_bool_ref(&in.ExperimentalFlannelOverlay, &out.ExperimentalFlannelOverlay, s); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.OutOfDiskTransitionFrequency, &out.OutOfDiskTransitionFrequency, 0); err != nil {
+		return err
+	}
+	out.NodeIP = in.NodeIP
+	if in.NodeLabels != nil {
+		out.NodeLabels = make(map[string]string)
+		for key, val := range in.NodeLabels {
+			out.NodeLabels[key] = val
+		}
+	} else {
+		out.NodeLabels = nil
+	}
+	out.NonMasqueradeCIDR = in.NonMasqueradeCIDR
+	return nil
+}
+
+func Convert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfiguration(in *componentconfig.KubeletConfiguration, out *KubeletConfiguration, s conversion.Scope) error {
+	return autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfiguration(in, out, s)
+}
+
 func autoConvert_v1alpha1_KubeProxyConfiguration_To_componentconfig_KubeProxyConfiguration(in *KubeProxyConfiguration, out *componentconfig.KubeProxyConfiguration, s conversion.Scope) error {
 	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
 		defaulting.(func(*KubeProxyConfiguration))(in)
@@ -106,10 +234,140 @@ func Convert_v1alpha1_KubeProxyConfiguration_To_componentconfig_KubeProxyConfigu
 	return autoConvert_v1alpha1_KubeProxyConfiguration_To_componentconfig_KubeProxyConfiguration(in, out, s)
 }
 
+func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfiguration(in *KubeletConfiguration, out *componentconfig.KubeletConfiguration, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*KubeletConfiguration))(in)
+	}
+	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
+		return err
+	}
+	out.Config = in.Config
+	if err := s.Convert(&in.SyncFrequency, &out.SyncFrequency, 0); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.FileCheckFrequency, &out.FileCheckFrequency, 0); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.HTTPCheckFrequency, &out.HTTPCheckFrequency, 0); err != nil {
+		return err
+	}
+	out.ManifestURL = in.ManifestURL
+	out.ManifestURLHeader = in.ManifestURLHeader
+	if err := api.Convert_bool_ref_To_bool(&in.EnableServer, &out.EnableServer, s); err != nil {
+		return err
+	}
+	out.Address = in.Address
+	out.Port = uint(in.Port)
+	out.ReadOnlyPort = uint(in.ReadOnlyPort)
+	out.TLSCertFile = in.TLSCertFile
+	out.TLSPrivateKeyFile = in.TLSPrivateKeyFile
+	out.CertDirectory = in.CertDirectory
+	out.HostnameOverride = in.HostnameOverride
+	out.PodInfraContainerImage = in.PodInfraContainerImage
+	out.DockerEndpoint = in.DockerEndpoint
+	out.RootDirectory = in.RootDirectory
+	if err := api.Convert_bool_ref_To_bool(&in.AllowPrivileged, &out.AllowPrivileged, s); err != nil {
+		return err
+	}
+	out.HostNetworkSources = in.HostNetworkSources
+	out.HostPIDSources = in.HostPIDSources
+	out.HostIPCSources = in.HostIPCSources
+	out.RegistryPullQPS = in.RegistryPullQPS
+	out.RegistryBurst = int(in.RegistryBurst)
+	out.EventRecordQPS = in.EventRecordQPS
+	out.EventBurst = int(in.EventBurst)
+	if err := api.Convert_bool_ref_To_bool(&in.EnableDebuggingHandlers, &out.EnableDebuggingHandlers, s); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.MinimumGCAge, &out.MinimumGCAge, 0); err != nil {
+		return err
+	}
+	out.MaxPerPodContainerCount = int(in.MaxPerPodContainerCount)
+	out.MaxContainerCount = int(in.MaxContainerCount)
+	out.CAdvisorPort = uint(in.CAdvisorPort)
+	out.HealthzPort = int(in.HealthzPort)
+	out.HealthzBindAddress = in.HealthzBindAddress
+	out.OOMScoreAdj = int(in.OOMScoreAdj)
+	if err := api.Convert_bool_ref_To_bool(&in.RegisterNode, &out.RegisterNode, s); err != nil {
+		return err
+	}
+	out.ClusterDomain = in.ClusterDomain
+	out.MasterServiceNamespace = in.MasterServiceNamespace
+	out.ClusterDNS = in.ClusterDNS
+	if err := s.Convert(&in.StreamingConnectionIdleTimeout, &out.StreamingConnectionIdleTimeout, 0); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.NodeStatusUpdateFrequency, &out.NodeStatusUpdateFrequency, 0); err != nil {
+		return err
+	}
+	out.ImageGCHighThresholdPercent = int(in.ImageGCHighThresholdPercent)
+	out.ImageGCLowThresholdPercent = int(in.ImageGCLowThresholdPercent)
+	out.LowDiskSpaceThresholdMB = int(in.LowDiskSpaceThresholdMB)
+	out.NetworkPluginName = in.NetworkPluginName
+	out.NetworkPluginDir = in.NetworkPluginDir
+	out.VolumePluginDir = in.VolumePluginDir
+	out.CloudProvider = in.CloudProvider
+	out.CloudConfigFile = in.CloudConfigFile
+	out.ResourceContainer = in.ResourceContainer
+	out.CgroupRoot = in.CgroupRoot
+	out.ContainerRuntime = in.ContainerRuntime
+	out.RktPath = in.RktPath
+	out.RktStage1Image = in.RktStage1Image
+	out.SystemContainer = in.SystemContainer
+	if err := api.Convert_bool_ref_To_bool(&in.ConfigureCBR0, &out.ConfigureCBR0, s); err != nil {
+		return err
+	}
+	out.MaxPods = int(in.MaxPods)
+	out.DockerExecHandlerName = in.DockerExecHandlerName
+	out.PodCIDR = in.PodCIDR
+	out.ResolverConfig = in.ResolverConfig
+	if err := api.Convert_bool_ref_To_bool(&in.CPUCFSQuota, &out.CPUCFSQuota, s); err != nil {
+		return err
+	}
+	if err := api.Convert_bool_ref_To_bool(&in.Containerized, &out.Containerized, s); err != nil {
+		return err
+	}
+	out.MaxOpenFiles = in.MaxOpenFiles
+	if err := api.Convert_bool_ref_To_bool(&in.ReconcileCIDR, &out.ReconcileCIDR, s); err != nil {
+		return err
+	}
+	if err := api.Convert_bool_ref_To_bool(&in.RegisterSchedulable, &out.RegisterSchedulable, s); err != nil {
+		return err
+	}
+	out.KubeAPIQPS = in.KubeAPIQPS
+	out.KubeAPIBurst = int(in.KubeAPIBurst)
+	if err := api.Convert_bool_ref_To_bool(&in.SerializeImagePulls, &out.SerializeImagePulls, s); err != nil {
+		return err
+	}
+	if err := api.Convert_bool_ref_To_bool(&in.ExperimentalFlannelOverlay, &out.ExperimentalFlannelOverlay, s); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.OutOfDiskTransitionFrequency, &out.OutOfDiskTransitionFrequency, 0); err != nil {
+		return err
+	}
+	out.NodeIP = in.NodeIP
+	if in.NodeLabels != nil {
+		out.NodeLabels = make(map[string]string)
+		for key, val := range in.NodeLabels {
+			out.NodeLabels[key] = val
+		}
+	} else {
+		out.NodeLabels = nil
+	}
+	out.NonMasqueradeCIDR = in.NonMasqueradeCIDR
+	return nil
+}
+
+func Convert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfiguration(in *KubeletConfiguration, out *componentconfig.KubeletConfiguration, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfiguration(in, out, s)
+}
+
 func init() {
 	err := api.Scheme.AddGeneratedConversionFuncs(
 		autoConvert_componentconfig_KubeProxyConfiguration_To_v1alpha1_KubeProxyConfiguration,
+		autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfiguration,
 		autoConvert_v1alpha1_KubeProxyConfiguration_To_componentconfig_KubeProxyConfiguration,
+		autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfiguration,
 	)
 	if err != nil {
 		// If one of the conversion functions is malformed, detect it immediately.
