@@ -19,8 +19,11 @@ package v1alpha1
 import (
 	"time"
 
+	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/kubelet/qos"
+	kubetypes "k8s.io/kubernetes/pkg/kubelet/types"
+	"k8s.io/kubernetes/pkg/master/ports"
 	"k8s.io/kubernetes/pkg/runtime"
 )
 
@@ -44,5 +47,172 @@ func addDefaultingFuncs(scheme *runtime.Scheme) {
 				obj.IPTablesSyncPeriod = unversioned.Duration{5 * time.Second}
 			}
 		},
+		func(obj *KubeletConfiguration) {
+			if obj.Address == "" {
+				obj.Address = "0.0.0.0"
+			}
+			if obj.CAdvisorPort == 0 {
+				obj.CAdvisorPort = 4194
+			}
+			if obj.CertDirectory == "" {
+				obj.CertDirectory = "/var/run/kubernetes"
+			}
+			if obj.CgroupRoot == "" {
+				obj.CgroupRoot = ""
+			}
+			if obj.ConfigureCBR0 == nil {
+				obj.ConfigureCBR0 = boolVar(false)
+			}
+			if obj.ContainerRuntime == "" {
+				obj.ContainerRuntime = "docker"
+			}
+			if obj.CPUCFSQuota == nil {
+				obj.CPUCFSQuota = boolVar(true)
+			}
+			if obj.DockerExecHandlerName == "" {
+				obj.DockerExecHandlerName = "native"
+			}
+			if obj.DockerEndpoint == "" {
+				obj.DockerEndpoint = "unix:///var/run/docker.sock"
+			}
+			if obj.EventBurst == 0 {
+				obj.EventBurst = 10
+			}
+			if obj.EventRecordQPS == 0 {
+				obj.EventRecordQPS = 5.0
+			}
+			if obj.EnableDebuggingHandlers == nil {
+				obj.EnableDebuggingHandlers = boolVar(true)
+			}
+			if obj.EnableServer == nil {
+				obj.EnableServer = boolVar(true)
+			}
+			zero := unversioned.Duration{}
+			if obj.FileCheckFrequency == zero {
+				obj.FileCheckFrequency = unversioned.Duration{20 * time.Second}
+			}
+			if obj.HealthzBindAddress == "" {
+				obj.HealthzBindAddress = "127.0.0.1"
+			}
+			if obj.HealthzPort == 0 {
+				obj.HealthzPort = 10248
+			}
+			if obj.HostNetworkSources == "" {
+				obj.HostNetworkSources = kubetypes.AllSource
+			}
+			if obj.HostPIDSources == "" {
+				obj.HostPIDSources = kubetypes.AllSource
+			}
+			if obj.HostIPCSources == "" {
+				obj.HostIPCSources = kubetypes.AllSource
+			}
+			if obj.HTTPCheckFrequency == zero {
+				obj.HTTPCheckFrequency = unversioned.Duration{20 * time.Second}
+			}
+			if obj.ImageGCHighThresholdPercent == 0 {
+				obj.ImageGCHighThresholdPercent = 90
+			}
+			if obj.ImageGCLowThresholdPercent == 0 {
+				obj.ImageGCLowThresholdPercent = 80
+			}
+			if obj.LowDiskSpaceThresholdMB == 0 {
+				obj.LowDiskSpaceThresholdMB = 256
+			}
+			if obj.MasterServiceNamespace == "" {
+				obj.MasterServiceNamespace = api.NamespaceDefault
+			}
+			if obj.MaxContainerCount == 0 {
+				obj.MaxContainerCount = 100
+			}
+			if obj.MaxPerPodContainerCount == 0 {
+				obj.MaxPerPodContainerCount = 2
+			}
+			if obj.MaxOpenFiles == 0 {
+				obj.MaxOpenFiles = 1000000
+			}
+			if obj.MaxPods == 0 {
+				obj.MaxPods = 40
+			}
+			if obj.MinimumGCAge == zero {
+				obj.MinimumGCAge = unversioned.Duration{1 * time.Minute}
+			}
+			if obj.NetworkPluginDir == "" {
+				obj.NetworkPluginDir = "/usr/libexec/kubernetes/kubelet-plugins/net/exec/"
+			}
+			if obj.NonMasqueradeCIDR == "" {
+				obj.NonMasqueradeCIDR = "10.0.0.0/8"
+			}
+			if obj.VolumePluginDir == "" {
+				obj.VolumePluginDir = "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+			}
+			if obj.NodeStatusUpdateFrequency == zero {
+				obj.NodeStatusUpdateFrequency = unversioned.Duration{10 * time.Second}
+			}
+			if obj.OOMScoreAdj == 0 {
+				obj.OOMScoreAdj = int32(qos.KubeletOOMScoreAdj)
+			}
+			if obj.PodInfraContainerImage == "" {
+				obj.PodInfraContainerImage = kubetypes.PodInfraContainerImage
+			}
+			if obj.Port == 0 {
+				obj.Port = ports.KubeletPort
+			}
+			if obj.ReadOnlyPort == 0 {
+				obj.ReadOnlyPort = ports.KubeletReadOnlyPort
+			}
+			if obj.RegisterNode == nil {
+				obj.RegisterNode = boolVar(true)
+			}
+			if obj.ResolverConfig == "" {
+				obj.ResolverConfig = "/etc/resolv.conf"
+			}
+			if obj.RegisterSchedulable == nil {
+				obj.RegisterSchedulable = boolVar(true)
+			}
+			if obj.RegistryBurst == 0 {
+				obj.RegistryBurst = 10
+			}
+			if obj.RegistryPullQPS == 0 {
+				obj.RegistryPullQPS = 5.0
+			}
+			if obj.ResourceContainer == "" {
+				obj.ResourceContainer = "/kubelet"
+			}
+			if obj.RootDirectory == "" {
+				obj.RootDirectory = "/var/lib/kubelet"
+			}
+			if obj.SerializeImagePulls == nil {
+				obj.SerializeImagePulls = boolVar(true)
+			}
+			if obj.StreamingConnectionIdleTimeout == zero {
+				obj.StreamingConnectionIdleTimeout = unversioned.Duration{5 * time.Minute}
+			}
+			if obj.SyncFrequency == zero {
+				obj.SyncFrequency = unversioned.Duration{1 * time.Minute}
+			}
+			if obj.ReconcileCIDR == nil {
+				obj.ReconcileCIDR = boolVar(true)
+			}
+			if obj.KubeAPIQPS == 0 {
+				obj.KubeAPIQPS = 5.0
+			}
+			if obj.KubeAPIBurst == 0 {
+				obj.KubeAPIBurst = 10
+			}
+			if obj.ExperimentalFlannelOverlay == nil {
+				obj.ExperimentalFlannelOverlay = boolVar(false)
+			}
+			if obj.OutOfDiskTransitionFrequency == zero {
+				obj.OutOfDiskTransitionFrequency = unversioned.Duration{5 * time.Minute}
+			}
+		},
 	)
 }
+
+func boolVar(b bool) *bool {
+	return &b
+}
+
+var (
+	defaultCfg = KubeletConfiguration{}
+)

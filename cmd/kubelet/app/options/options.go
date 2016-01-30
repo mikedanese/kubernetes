@@ -19,22 +19,14 @@ package options
 
 import (
 	_ "net/http/pprof"
-	"time"
 
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/apis/componentconfig"
-	"k8s.io/kubernetes/pkg/kubelet/qos"
+	"k8s.io/kubernetes/pkg/apis/componentconfig/v1alpha1"
 	kubetypes "k8s.io/kubernetes/pkg/kubelet/types"
-	"k8s.io/kubernetes/pkg/master/ports"
 	"k8s.io/kubernetes/pkg/util"
 
 	"github.com/spf13/pflag"
-)
-
-const (
-	defaultRootDir             = "/var/lib/kubelet"
-	experimentalFlannelOverlay = false
 )
 
 // KubeletServer encapsulates all of the parameters necessary for starting up
@@ -59,70 +51,16 @@ type KubeletServer struct {
 
 // NewKubeletServer will create a new KubeletServer with default values.
 func NewKubeletServer() *KubeletServer {
+	config := componentconfig.KubeletConfiguration{}
+	api.Scheme.Convert(&v1alpha1.KubeletConfiguration{}, &config)
 	return &KubeletServer{
 		AuthPath:              util.NewStringFlag("/var/lib/kubelet/kubernetes_auth"), // deprecated
 		KubeConfig:            util.NewStringFlag("/var/lib/kubelet/kubeconfig"),
 		DockerDaemonContainer: "/docker-daemon",
 
-		SystemReserved: make(util.ConfigurationMap),
-		KubeReserved:   make(util.ConfigurationMap),
-		KubeletConfiguration: componentconfig.KubeletConfiguration{
-			Address:                     "0.0.0.0",
-			CAdvisorPort:                4194,
-			CertDirectory:               "/var/run/kubernetes",
-			CgroupRoot:                  "",
-			ConfigureCBR0:               false,
-			ContainerRuntime:            "docker",
-			CPUCFSQuota:                 true,
-			DockerExecHandlerName:       "native",
-			EventBurst:                  10,
-			EventRecordQPS:              5.0,
-			EnableDebuggingHandlers:     true,
-			EnableServer:                true,
-			FileCheckFrequency:          unversioned.Duration{20 * time.Second},
-			HealthzBindAddress:          "127.0.0.1",
-			HealthzPort:                 10248,
-			HostNetworkSources:          kubetypes.AllSource,
-			HostPIDSources:              kubetypes.AllSource,
-			HostIPCSources:              kubetypes.AllSource,
-			HTTPCheckFrequency:          unversioned.Duration{20 * time.Second},
-			ImageGCHighThresholdPercent: 90,
-			ImageGCLowThresholdPercent:  80,
-			LowDiskSpaceThresholdMB:     256,
-			MasterServiceNamespace:      api.NamespaceDefault,
-			MaxContainerCount:           100,
-			MaxPerPodContainerCount:     2,
-			MaxOpenFiles:                1000000,
-			MaxPods:                     40,
-			MinimumGCAge:                unversioned.Duration{1 * time.Minute},
-			NetworkPluginDir:            "/usr/libexec/kubernetes/kubelet-plugins/net/exec/",
-			NetworkPluginName:           "",
-			NonMasqueradeCIDR:           "10.0.0.0/8",
-			VolumePluginDir:             "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/",
-			NodeStatusUpdateFrequency:   unversioned.Duration{10 * time.Second},
-			NodeLabels:                  make(map[string]string),
-			OOMScoreAdj:                 qos.KubeletOOMScoreAdj,
-			PodInfraContainerImage:      kubetypes.PodInfraContainerImage,
-			Port:                           ports.KubeletPort,
-			ReadOnlyPort:                   ports.KubeletReadOnlyPort,
-			RegisterNode:                   true, // will be ignored if no apiserver is configured
-			RegisterSchedulable:            true,
-			RegistryBurst:                  10,
-			RegistryPullQPS:                5.0,
-			ResourceContainer:              "/kubelet",
-			RktPath:                        "",
-			RktStage1Image:                 "",
-			RootDirectory:                  defaultRootDir,
-			SerializeImagePulls:            true,
-			StreamingConnectionIdleTimeout: unversioned.Duration{4 * time.Hour},
-			SyncFrequency:                  unversioned.Duration{1 * time.Minute},
-			SystemContainer:                "",
-			ReconcileCIDR:                  true,
-			KubeAPIQPS:                     5.0,
-			KubeAPIBurst:                   10,
-			ExperimentalFlannelOverlay:     experimentalFlannelOverlay,
-			OutOfDiskTransitionFrequency:   unversioned.Duration{5 * time.Minute},
-		},
+		SystemReserved:       make(util.ConfigurationMap),
+		KubeReserved:         make(util.ConfigurationMap),
+		KubeletConfiguration: config,
 	}
 }
 

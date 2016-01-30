@@ -77,6 +77,8 @@ const (
 
 // TODO: curate the ordering and structure of this config object
 type KubeletConfiguration struct {
+	unversioned.TypeMeta
+
 	// config is the path to the config file or directory of files
 	Config string `json:"config"`
 	// syncFrequency is the max period between synchronizing running
