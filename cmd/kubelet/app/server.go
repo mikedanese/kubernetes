@@ -257,6 +257,12 @@ func UnsecuredKubeletConfig(s *options.KubeletServer) (*KubeletConfig, error) {
 // will be ignored.
 func Run(s *options.KubeletServer, kcfg *KubeletConfig) error {
 	var err error
+	if s.ConfigPath != "" {
+		s.KubeletConfiguration = componentconfig.KubeletConfiguration{}
+		if err := componentconfig.ReadConfig(s.ConfigPath, &s.KubeletConfiguration); err != nil {
+			return err
+		}
+	}
 	if kcfg == nil {
 		cfg, err := UnsecuredKubeletConfig(s)
 		if err != nil {

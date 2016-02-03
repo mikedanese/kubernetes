@@ -18,14 +18,26 @@ package componentconfig
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
 
+	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/runtime"
 	utilnet "k8s.io/kubernetes/pkg/util/net"
 )
 
 // used for validating command line opts
 // TODO(mikedanese): remove these when we remove command line flags
 
+func ReadConfig(path string, obj runtime.Object) error {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return runtime.DecodeInto(api.Codecs.UniversalDecoder(), b, obj)
+}
+
+// used for validating command line ip addresses.
 type IPVar struct {
 	Val *string
 }

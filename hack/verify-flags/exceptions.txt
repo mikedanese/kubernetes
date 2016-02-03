@@ -107,3 +107,9 @@ test/e2e/host_path.go:			fmt.Sprintf("--retry_time=%d", retryDuration),
 test/images/mount-tester/mt.go:	flag.BoolVar(&breakOnExpectedContent, "break_on_expected_content", true, "Break out of loop on expected content, (use with --file_content_in_loop flag only)")
 test/images/mount-tester/mt.go:	flag.IntVar(&retryDuration, "retry_time", 180, "Retry time during the loop")
 test/images/mount-tester/mt.go:	flag.StringVar(&readFileContentInLoopPath, "file_content_in_loop", "", "Path to read the file content in loop from")
+cluster/saltbase/salt/kubelet/kubelet.py:    config["hostnameOverride"] = grains["hostname_override"]
+cluster/saltbase/salt/kubelet/kubelet.py:    config["nonMasqueradeCIDR"] = grains["non_masquerade_cidr"]
+cluster/saltbase/salt/kubelet/kubelet.py:  if "allocate_node_cidrs" in pillar:
+cluster/saltbase/salt/kubelet/kubelet.py:  if "hostname_override" in grains:
+cluster/saltbase/salt/kubelet/kubelet.py:  if "kubelet_port" in pillar:
+cluster/saltbase/salt/kubelet/kubelet.py:  if "non_masquerade_cidr" in grains:

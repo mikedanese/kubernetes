@@ -371,3 +371,4 @@ leader-elect
 leader-elect-lease-duration
 leader-elect-renew-deadline
 leader-elect-retry-period
+alpha-component-config-path
