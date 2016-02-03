@@ -388,3 +388,4 @@ leader-elect-retry-period
 watch-cache-sizes
 configure-hairpin-mode
 lock-file
+alpha-component-config-path

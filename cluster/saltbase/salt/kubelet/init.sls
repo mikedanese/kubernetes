@@ -12,6 +12,14 @@
     - group: root
     - mode: 644
 
+/etc/kubernetes/kubelet.json:
+  file.managed:
+    - source: salt://kubelet/kubelet.py
+    - template: py
+    - user: root
+    - group: root
+    - mode: 644
+
 /usr/local/bin/kubelet:
   file.managed:
     - source: salt://kube-bins/kubelet

@@ -66,6 +66,7 @@ kubelet
 ```
       --address=0.0.0.0: The IP address for the Kubelet to serve on (set to 0.0.0.0 for all interfaces)
       --allow-privileged[=false]: If true, allow containers to request privileged mode. [default=false]
+      --alpha-component-config-path="": Path to the component config file.
       --api-servers=[]: List of Kubernetes API servers for publishing events, and reading pods and services. (ip:port), comma separated.
       --cadvisor-port=4194: The port of the localhost cAdvisor endpoint
       --cert-dir="/var/run/kubernetes": The directory where the TLS certs are located (by default /var/run/kubernetes). If --tls-cert-file and --tls-private-key-file are provided, this flag will be ignored.

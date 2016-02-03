@@ -34,6 +34,8 @@ import (
 type KubeletServer struct {
 	componentconfig.KubeletConfiguration
 
+	ConfigPath string
+
 	AuthPath      util.StringFlag // Deprecated -- use KubeConfig instead
 	KubeConfig    util.StringFlag
 	APIServerList []string
@@ -64,6 +66,7 @@ func NewKubeletServer() *KubeletServer {
 
 // AddFlags adds flags for a specific KubeletServer to the specified FlagSet
 func (s *KubeletServer) AddFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&s.ConfigPath, "alpha-component-config-path", s.ConfigPath, "Path to the component config file.")
 	fs.StringVar(&s.Config, "config", s.Config, "Path to the config file or directory of files")
 	fs.DurationVar(&s.SyncFrequency.Duration, "sync-frequency", s.SyncFrequency.Duration, "Max period between synchronizing running containers and config")
 	fs.DurationVar(&s.FileCheckFrequency.Duration, "file-check-frequency", s.FileCheckFrequency.Duration, "Duration between checking config files for new data")

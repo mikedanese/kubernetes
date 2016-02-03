@@ -36,6 +36,7 @@ import (
 	"k8s.io/kubernetes/cmd/kubelet/app/options"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/resource"
+	"k8s.io/kubernetes/pkg/apis/componentconfig"
 	"k8s.io/kubernetes/pkg/capabilities"
 	"k8s.io/kubernetes/pkg/client/chaosclient"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
@@ -263,6 +264,12 @@ func UnsecuredKubeletConfig(s *options.KubeletServer) (*KubeletConfig, error) {
 // will be ignored.
 func Run(s *options.KubeletServer, kcfg *KubeletConfig) error {
 	var err error
+	if s.ConfigPath != "" {
+		s.KubeletConfiguration = componentconfig.KubeletConfiguration{}
+		if err := componentconfig.ReadConfig(s.ConfigPath, &s.KubeletConfiguration); err != nil {
+			return err
+		}
+	}
 	if s.LockFilePath != "" {
 		glog.Infof("aquiring lock on %q", s.LockFilePath)
 		if err := flock.Acquire(s.LockFilePath); err != nil {
