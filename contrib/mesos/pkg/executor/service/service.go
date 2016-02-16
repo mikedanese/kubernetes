@@ -209,7 +209,7 @@ func (s *KubeletExecutorServer) runKubelet(
 
 	// create custom cAdvisor interface which return the resource values that Mesos reports
 	ni := <-nodeInfos
-	cAdvisorInterface, err := NewMesosCadvisor(ni.Cores, ni.Mem, s.CAdvisorPort)
+	cAdvisorInterface, err := NewMesosCadvisor(ni.Cores, ni.Mem, uint(s.CAdvisorPort))
 	if err != nil {
 		return err
 	}

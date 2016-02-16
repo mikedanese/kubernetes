@@ -79,9 +79,9 @@ kubelet
       --configure-cbr0[=false]: If true, kubelet will configure cbr0 based on Node.Spec.PodCIDR.
       --container-runtime="docker": The container runtime to use. Possible values: 'docker', 'rkt'. Default: 'docker'.
       --containerized[=false]: Experimental support for running kubelet in a container.  Intended for testing. [default=false]
-      --cpu-cfs-quota[=true]: Enable CPU CFS quota enforcement for containers that specify CPU limits
-      --docker-endpoint="": If non-empty, use this for the docker endpoint to communicate with
-      --docker-exec-handler="native": Handler to use when executing a command in a container. Valid values are 'native' and 'nsenter'. Defaults to 'native'.
+      --cpu-cfs-quota[=false]: Enable CPU CFS quota enforcement for containers that specify CPU limits
+      --docker-endpoint="unix:///var/run/docker.sock": Use this for the docker endpoint to communicate with
+      --docker-exec-handler="": Handler to use when executing a command in a container. Valid values are 'native' and 'nsenter'. Defaults to 'native'.
       --enable-custom-metrics[=false]: Support for gathering custom metrics.
       --enable-debugging-handlers[=true]: Enables server endpoints for log collection and local running of containers and commands
       --enable-server[=true]: Enable the Kubelet's server
@@ -90,18 +90,18 @@ kubelet
       --experimental-flannel-overlay[=false]: Experimental support for starting the kubelet with the default overlay network (flannel). Assumes flanneld is already running in client mode. [default=false]
       --file-check-frequency=20s: Duration between checking config files for new data
       --google-json-key="": The Google Cloud Platform Service Account JSON Key to use for authentication.
-      --hairpin-mode="promiscuous-bridge": How should the kubelet setup hairpin NAT. This allows endpoints of a Service to loadbalance back to themselves if they should try to access their own Service. Valid values are "promiscuous-bridge", "hairpin-veth" and "none".
+      --hairpin-mode="": How should the kubelet setup hairpin NAT. This allows endpoints of a Service to loadbalance back to themselves if they should try to access their own Service. Valid values are "promiscuous-bridge", "hairpin-veth" and "none".
       --healthz-bind-address=127.0.0.1: The IP address for the healthz server to serve on, defaulting to 127.0.0.1 (set to 0.0.0.0 for all interfaces)
       --healthz-port=10248: The port of the localhost healthz endpoint
-      --host-ipc-sources="*": Comma-separated list of sources from which the Kubelet allows pods to use the host ipc namespace. [default="*"]
-      --host-network-sources="*": Comma-separated list of sources from which the Kubelet allows pods to use of host network. [default="*"]
-      --host-pid-sources="*": Comma-separated list of sources from which the Kubelet allows pods to use the host pid namespace. [default="*"]
+      --host-ipc-sources=[*]: Comma-separated list of sources from which the Kubelet allows pods to use the host ipc namespace. [default="*"]
+      --host-network-sources=[*]: Comma-separated list of sources from which the Kubelet allows pods to use of host network. [default="*"]
+      --host-pid-sources=[*]: Comma-separated list of sources from which the Kubelet allows pods to use the host pid namespace. [default="*"]
       --hostname-override="": If non-empty, will use this string as identification instead of the actual hostname.
       --http-check-frequency=20s: Duration between checking http for new data
       --image-gc-high-threshold=90: The percent of disk usage after which image garbage collection is always run. Default: 90%
       --image-gc-low-threshold=80: The percent of disk usage before which image garbage collection is never run. Lowest disk usage to garbage collect to. Default: 80%
-      --kube-api-burst=10: Burst to use while talking with kubernetes apiserver
-      --kube-api-qps=5: QPS to use while talking with kubernetes apiserver
+      --kube-api-burst=0: Burst to use while talking with kubernetes apiserver
+      --kube-api-qps=0: QPS to use while talking with kubernetes apiserver
       --kube-reserved=: A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs that describe resources reserved for kubernetes system components. Currently only cpu and memory are supported. See http://releases.k8s.io/HEAD/docs/user-guide/compute-resources.md for more detail. [default=none]
       --kubeconfig="/var/lib/kubelet/kubeconfig": Path to a kubeconfig file, specifying how to authenticate to API server (the master location is set by the api-servers flag).
       --kubelet-cgroups="": Optional absolute name of cgroups to create and run the Kubelet in.
@@ -111,37 +111,37 @@ kubelet
       --manifest-url="": URL for accessing the container manifest
       --manifest-url-header="": HTTP header to use when accessing the manifest URL, with the key separated from the value with a ':', as in 'key:value'
       --master-service-namespace="default": The namespace from which the kubernetes master services should be injected into pods
-      --max-open-files=1000000: Number of files that can be opened by Kubelet process. [default=1000000]
-      --max-pods=110: Number of Pods that can run on this Kubelet.
-      --maximum-dead-containers=240: Maximum number of old instances of containers to retain globally.  Each container takes up some disk space.  Default: 100.
+      --max-open-files=0: Number of files that can be opened by Kubelet process. [default=1000000]
+      --max-pods=0: Number of Pods that can run on this Kubelet.
+      --maximum-dead-containers=100: Maximum number of old instances of containers to retain globally.  Each container takes up some disk space.  Default: 100.
       --maximum-dead-containers-per-container=2: Maximum number of old instances to retain per container.  Each container takes up some disk space.  Default: 2.
       --minimum-container-ttl-duration=1m0s: Minimum age for a finished container before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'
-      --minimum-image-ttl-duration=2m0s: Minimum age for a unused image before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'. Default: '2m'
+      --minimum-image-ttl-duration=0: Minimum age for a unused image before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'. Default: '2m'
       --network-plugin="": <Warning: Alpha feature> The name of the network plugin to be invoked for various events in kubelet/pod lifecycle
       --network-plugin-dir="/usr/libexec/kubernetes/kubelet-plugins/net/exec/": <Warning: Alpha feature> The full path of the directory in which to search for network plugins
       --node-ip="": IP address of the node. If set, kubelet will use this IP address for the node
       --node-labels=: <Warning: Alpha feature> Labels to add when registering the node in the cluster.  Labels must be key=value pairs separated by ','.
       --node-status-update-frequency=10s: Specifies how often kubelet posts node status to master. Note: be cautious when changing the constant, it must work with nodeMonitorGracePeriod in nodecontroller. Default: 10s
-      --non-masquerade-cidr="10.0.0.0/8": Traffic to IPs outside this range will use IP masquerade.
+      --non-masquerade-cidr="": Traffic to IPs outside this range will use IP masquerade.
       --oom-score-adj=-999: The oom-score-adj value for kubelet process. Values must be within the range [-1000, 1000]
-      --outofdisk-transition-frequency=5m0s: Duration for which the kubelet has to wait before transitioning out of out-of-disk node condition status. Default: 5m0s
+      --outofdisk-transition-frequency=0: Duration for which the kubelet has to wait before transitioning out of out-of-disk node condition status. Default: 5m0s
       --pod-cidr="": The CIDR to use for pod IP addresses, only used in standalone mode.  In cluster mode, this is obtained from the master.
-      --pod-infra-container-image="gcr.io/google_containers/pause:2.0": The image whose network/ipc namespaces containers in each pod will use.
+      --pod-infra-container-image="": The image whose network/ipc namespaces containers in each pod will use.
       --port=10250: The port for the Kubelet to serve on.
       --read-only-port=10255: The read-only port for the Kubelet to serve on with no authentication/authorization (set to 0 to disable)
       --really-crash-for-testing[=false]: If true, when panics occur crash. Intended for testing.
-      --reconcile-cidr[=true]: Reconcile node CIDR with the CIDR specified by the API server. No-op if register-node or configure-cbr0 is false. [default=true]
+      --reconcile-cidr[=false]: Reconcile node CIDR with the CIDR specified by the API server. No-op if register-node or configure-cbr0 is false. [default=true]
       --register-node[=true]: Register the node with the apiserver (defaults to true if --api-servers is set)
-      --register-schedulable[=true]: Register the node as schedulable. No-op if register-node is false. [default=true]
+      --register-schedulable[=false]: Register the node as schedulable. No-op if register-node is false. [default=true]
       --registry-burst=10: Maximum size of a bursty pulls, temporarily allows pulls to burst to this number, while still not exceeding registry-qps.  Only used if --registry-qps > 0
       --registry-qps=5: If > 0, limit registry pull QPS to this value.  If 0, unlimited. [default=5.0]
       --resolv-conf="/etc/resolv.conf": Resolver configuration file used as the basis for the container DNS resolution configuration.
-      --rkt-api-endpoint="localhost:15441": The endpoint of the rkt API service to communicate with. Only used if --container-runtime='rkt'.
+      --rkt-api-endpoint="": The endpoint of the rkt API service to communicate with. Only used if --container-runtime='rkt'.
       --rkt-path="": Path of rkt binary. Leave empty to use the first rkt in $PATH.  Only used if --container-runtime='rkt'.
       --root-dir="/var/lib/kubelet": Directory path for managing kubelet files (volume mounts,etc).
       --runonce[=false]: If true, exit after spawning pods from local manifests or remote urls. Exclusive with --api-servers, and --enable-server
       --runtime-cgroups="": Optional absolute name of cgroups to create and run the runtime in.
-      --serialize-image-pulls[=true]: Pull images one at a time. We recommend *not* changing the default value on nodes that run docker daemon with version < 1.9 or an Aufs storage backend. Issue #10959 has more details. [default=true]
+      --serialize-image-pulls[=false]: Pull images one at a time. We recommend *not* changing the default value on nodes that run docker daemon with version < 1.9 or an Aufs storage backend. Issue #10959 has more details. [default=true]
       --streaming-connection-idle-timeout=4h0m0s: Maximum time a streaming connection can be idle before the connection is automatically closed. 0 indicates no timeout. Example: '5m'
       --sync-frequency=1m0s: Max period between synchronizing running containers and config
       --system-cgroups="": Optional absolute name of cgroups in which to place all non-kernel processes that are not already inside a cgroup under `/`. Empty for no container. Rolling back the flag requires a reboot. (Default: "").
@@ -152,7 +152,7 @@ kubelet
       --volume-stats-agg-period=1m0s: Specifies interval for kubelet to calculate and cache the volume disk usage for all pods and volumes.  To disable volume calculations, set to 0.  Default: '1m'
 ```
 
-###### Auto generated by spf13/cobra on 28-Mar-2016
+###### Auto generated by spf13/cobra on 11-Apr-2016
 
 
 <!-- BEGIN MUNGE: GENERATED_ANALYTICS -->
