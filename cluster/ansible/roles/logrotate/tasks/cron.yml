@@ -1,0 +1,4 @@
+- name: place logrotate cron
+  synchronize:
+    src: files/cron
+    dest: /etc/cron.hourly/logrotate

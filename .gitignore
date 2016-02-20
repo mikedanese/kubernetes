@@ -93,3 +93,11 @@ kubernetes/
 
 # direnv .envrc files
 .envrc
+
+# bazel
+/bazel-bin
+/bazel-genfiles
+/bazel-kubernetes
+/bazel-out
+/bazel-testlogs
+

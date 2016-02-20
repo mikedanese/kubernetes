@@ -1,0 +1,4 @@
+- hosts: node
+  tasks:
+  - include: tasks/cron.yml
+  - include: tasks/docker_containers.yml

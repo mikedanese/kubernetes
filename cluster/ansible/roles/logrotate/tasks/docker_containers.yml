@@ -1,0 +1,4 @@
+- name: place docker container logrotate
+  synchronize:
+    src: files/docker_containers
+    dest: /etc/logrotate.d/docker_containers
