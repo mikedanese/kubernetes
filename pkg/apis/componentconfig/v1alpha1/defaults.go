@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"runtime"
 	"time"
 
 	"k8s.io/kubernetes/pkg/api"
@@ -24,12 +25,24 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/qos"
 	kubetypes "k8s.io/kubernetes/pkg/kubelet/types"
 	"k8s.io/kubernetes/pkg/master/ports"
-	"k8s.io/kubernetes/pkg/runtime"
+	kruntime "k8s.io/kubernetes/pkg/runtime"
 )
 
 var zeroDuration = unversioned.Duration{}
 
-func addDefaultingFuncs(scheme *runtime.Scheme) {
+var defaultPodInfraConatinerImage = func() string {
+	const (
+		defaultPodInfraContainerImageName    = "gcr.io/google_containers/pause"
+		defaultPodInfraContainerImageVersion = "2.0"
+	)
+	if runtime.GOARCH == "amd64" {
+		return defaultPodInfraContainerImageName + ":" + defaultPodInfraContainerImageVersion
+	} else {
+		return defaultPodInfraContainerImageName + "-" + runtime.GOARCH + ":" + defaultPodInfraContainerImageVersion
+	}
+}()
+
+func addDefaultingFuncs(scheme *kruntime.Scheme) {
 	scheme.AddDefaultingFuncs(
 		func(obj *KubeProxyConfiguration) {
 			if obj.BindAddress == "" {
@@ -105,6 +118,9 @@ func addDefaultingFuncs(scheme *runtime.Scheme) {
 			if obj.CAdvisorPort == 0 {
 				obj.CAdvisorPort = 4194
 			}
+			if obj.VolumeStatsAggPeriod == zeroDuration {
+				obj.VolumeStatsAggPeriod = unversioned.Duration{1 * time.Minute}
+			}
 			if obj.CertDirectory == "" {
 				obj.CertDirectory = "/var/run/kubernetes"
 			}
@@ -156,10 +172,10 @@ func addDefaultingFuncs(scheme *runtime.Scheme) {
 			if obj.HTTPCheckFrequency == zeroDuration {
 				obj.HTTPCheckFrequency = unversioned.Duration{20 * time.Second}
 			}
-			if obj.ImageGCHighThresholdPercent == 0 {
+			if obj.ImageGCHighThresholdPercent == nil {
 				obj.ImageGCHighThresholdPercent = 90
 			}
-			if obj.ImageGCLowThresholdPercent == 0 {
+			if obj.ImageGCLowThresholdPercent == nil {
 				obj.ImageGCLowThresholdPercent = 80
 			}
 			if obj.LowDiskSpaceThresholdMB == 0 {
@@ -179,13 +195,10 @@ func addDefaultingFuncs(scheme *runtime.Scheme) {
 				obj.MaxOpenFiles = 1000000
 			}
 			if obj.MaxPods == 0 {
-				obj.MaxPods = 40
+				obj.MaxPods = 110
 			}
 			if obj.MinimumGCAge == zeroDuration {
 				obj.MinimumGCAge = unversioned.Duration{1 * time.Minute}
-			}
-			if obj.VolumeStatsAggPeriod == zeroDuration {
-				obj.VolumeStatsAggPeriod = unversioned.Duration{time.Minute}
 			}
 			if obj.NetworkPluginDir == "" {
 				obj.NetworkPluginDir = "/usr/libexec/kubernetes/kubelet-plugins/net/exec/"
@@ -203,7 +216,7 @@ func addDefaultingFuncs(scheme *runtime.Scheme) {
 				obj.OOMScoreAdj = int32(qos.KubeletOOMScoreAdj)
 			}
 			if obj.PodInfraContainerImage == "" {
-				//obj.PodInfraContainerImage = kubetypes.PodInfraContainerImage
+				obj.PodInfraContainerImage = defaultPodInfraContainer
 			}
 			if obj.Port == 0 {
 				obj.Port = ports.KubeletPort
@@ -214,9 +227,6 @@ func addDefaultingFuncs(scheme *runtime.Scheme) {
 			if obj.RegisterNode == nil {
 				obj.RegisterNode = boolVar(true)
 			}
-			if obj.ResolverConfig == "" {
-				obj.ResolverConfig = "/etc/resolv.conf"
-			}
 			if obj.RegisterSchedulable == nil {
 				obj.RegisterSchedulable = boolVar(true)
 			}
@@ -224,7 +234,10 @@ func addDefaultingFuncs(scheme *runtime.Scheme) {
 				obj.RegistryBurst = 10
 			}
 			if obj.RegistryPullQPS == 0 {
-				obj.RegistryPullQPS = 5.0
+				obj.RegistryPullQPS = 5
+			}
+			if obj.RktAPIEndpoint == "" {
+				obj.RktAPIEndpoint = "localhost:15441"
 			}
 			if obj.RootDirectory == "" {
 				obj.RootDirectory = "/var/lib/kubelet"
@@ -242,7 +255,7 @@ func addDefaultingFuncs(scheme *runtime.Scheme) {
 				obj.ReconcileCIDR = boolVar(true)
 			}
 			if obj.KubeAPIQPS == 0 {
-				obj.KubeAPIQPS = 5.0
+				obj.KubeAPIQPS = 5
 			}
 			if obj.KubeAPIBurst == 0 {
 				obj.KubeAPIBurst = 10
