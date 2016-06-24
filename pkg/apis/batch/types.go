@@ -80,14 +80,14 @@ type JobSpec struct {
 	// run at any given time. The actual number of pods running in steady state will
 	// be less than this number when ((.spec.completions - .status.successful) < .spec.parallelism),
 	// i.e. when the work left to do is less than max parallelism.
-	Parallelism *int32 `json:"parallelism,omitempty"`
+	Parallelism int32 `json:"parallelism,omitempty"`
 
 	// Completions specifies the desired number of successfully finished pods the
 	// job should be run with.  Setting to nil means that the success of any
 	// pod signals the success of all pods, and allows parallelism to have any positive
 	// value.  Setting to 1 means that parallelism is limited to 1 and the success of that
 	// pod signals the success of the job.
-	Completions *int32 `json:"completions,omitempty"`
+	Completions int32 `json:"completions,omitempty"`
 
 	// Optional duration in seconds relative to the startTime that the job may be active
 	// before the system tries to terminate it; value must be positive integer

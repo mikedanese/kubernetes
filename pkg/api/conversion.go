@@ -92,6 +92,26 @@ func Convert_bool_To_Pointer_bool(in *bool, out **bool, s conversion.Scope) erro
 	return nil
 }
 
+func Convert_Pointer_int32_To_int32(in **int32, out *int32, s conversion.Scope) error {
+	if *in == nil {
+		var int32Var int32
+		*out = int32Var
+		return nil
+	}
+	*out = **in
+	return nil
+}
+
+func Convert_int32_To_Pointer_int32(in *int32, out **int32, s conversion.Scope) error {
+	if in == nil {
+		var int32Var int32
+		*out = &int32Var
+		return nil
+	}
+	*out = in
+	return nil
+}
+
 func Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(in, out *unversioned.TypeMeta, s conversion.Scope) error {
 	// These values are explicitly not copied
 	//out.APIVersion = in.APIVersion

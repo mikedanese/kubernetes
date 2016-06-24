@@ -286,8 +286,12 @@ func Convert_v1beta1_ReplicaSetSpec_To_extensions_ReplicaSetSpec(in *ReplicaSetS
 }
 
 func Convert_batch_JobSpec_To_v1beta1_JobSpec(in *batch.JobSpec, out *JobSpec, s conversion.Scope) error {
-	out.Parallelism = in.Parallelism
-	out.Completions = in.Completions
+	if err := api.Convert_int32_To_Pointer_int32(&in.Parallelism, &out.Parallelism, s); err != nil {
+		return err
+	}
+	if err := api.Convert_int32_To_Pointer_int32(&in.Completions, &out.Completions, s); err != nil {
+		return err
+	}
 	out.ActiveDeadlineSeconds = in.ActiveDeadlineSeconds
 	// unable to generate simple pointer conversion for unversioned.LabelSelector -> v1beta1.LabelSelector
 	if in.Selector != nil {
@@ -320,8 +324,12 @@ func Convert_batch_JobSpec_To_v1beta1_JobSpec(in *batch.JobSpec, out *JobSpec, s
 }
 
 func Convert_v1beta1_JobSpec_To_batch_JobSpec(in *JobSpec, out *batch.JobSpec, s conversion.Scope) error {
-	out.Parallelism = in.Parallelism
-	out.Completions = in.Completions
+	if err := api.Convert_Pointer_int32_To_int32(&in.Parallelism, &out.Parallelism, s); err != nil {
+		return err
+	}
+	if err := api.Convert_Pointer_int32_To_int32(&in.Completions, &out.Completions, s); err != nil {
+		return err
+	}
 	out.ActiveDeadlineSeconds = in.ActiveDeadlineSeconds
 	// unable to generate simple pointer conversion for v1beta1.LabelSelector -> unversioned.LabelSelector
 	if in.Selector != nil {
