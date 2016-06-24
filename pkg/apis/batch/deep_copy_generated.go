@@ -97,20 +97,8 @@ func DeepCopy_batch_JobList(in JobList, out *JobList, c *conversion.Cloner) erro
 }
 
 func DeepCopy_batch_JobSpec(in JobSpec, out *JobSpec, c *conversion.Cloner) error {
-	if in.Parallelism != nil {
-		in, out := in.Parallelism, &out.Parallelism
-		*out = new(int32)
-		**out = *in
-	} else {
-		out.Parallelism = nil
-	}
-	if in.Completions != nil {
-		in, out := in.Completions, &out.Completions
-		*out = new(int32)
-		**out = *in
-	} else {
-		out.Completions = nil
-	}
+	out.Parallelism = in.Parallelism
+	out.Completions = in.Completions
 	if in.ActiveDeadlineSeconds != nil {
 		in, out := in.ActiveDeadlineSeconds, &out.ActiveDeadlineSeconds
 		*out = new(int64)

@@ -192,8 +192,12 @@ func Convert_batch_JobList_To_v2alpha1_JobList(in *batch.JobList, out *JobList, 
 }
 
 func autoConvert_v2alpha1_JobSpec_To_batch_JobSpec(in *JobSpec, out *batch.JobSpec, s conversion.Scope) error {
-	out.Parallelism = in.Parallelism
-	out.Completions = in.Completions
+	if err := api.Convert_Pointer_int32_To_int32(&in.Parallelism, &out.Parallelism, s); err != nil {
+		return err
+	}
+	if err := api.Convert_Pointer_int32_To_int32(&in.Completions, &out.Completions, s); err != nil {
+		return err
+	}
 	out.ActiveDeadlineSeconds = in.ActiveDeadlineSeconds
 	if in.Selector != nil {
 		in, out := &in.Selector, &out.Selector
@@ -212,8 +216,12 @@ func autoConvert_v2alpha1_JobSpec_To_batch_JobSpec(in *JobSpec, out *batch.JobSp
 }
 
 func autoConvert_batch_JobSpec_To_v2alpha1_JobSpec(in *batch.JobSpec, out *JobSpec, s conversion.Scope) error {
-	out.Parallelism = in.Parallelism
-	out.Completions = in.Completions
+	if err := api.Convert_int32_To_Pointer_int32(&in.Parallelism, &out.Parallelism, s); err != nil {
+		return err
+	}
+	if err := api.Convert_int32_To_Pointer_int32(&in.Completions, &out.Completions, s); err != nil {
+		return err
+	}
 	out.ActiveDeadlineSeconds = in.ActiveDeadlineSeconds
 	if in.Selector != nil {
 		in, out := &in.Selector, &out.Selector
