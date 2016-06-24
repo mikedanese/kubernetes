@@ -328,6 +328,9 @@ func run(s *options.KubeletServer, kcfg *KubeletConfig) (err error) {
 		clientConfig, err := CreateAPIServerClientConfig(s)
 		if err == nil {
 			kcfg.KubeClient, err = clientset.NewForConfig(clientConfig)
+			if err != nil {
+				return err
+			}
 
 			// make a separate client for events
 			eventClientConfig := *clientConfig
