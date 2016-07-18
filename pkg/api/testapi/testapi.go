@@ -33,6 +33,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/autoscaling"
 	"k8s.io/kubernetes/pkg/apis/batch"
 	"k8s.io/kubernetes/pkg/apis/certificates"
+	"k8s.io/kubernetes/pkg/apis/componentconfig"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/apis/policy"
 	"k8s.io/kubernetes/pkg/apis/rbac"
@@ -198,6 +199,13 @@ func init() {
 			externalGroupVersion: unversioned.GroupVersion{Group: certificates.GroupName, Version: registered.GroupOrDie(certificates.GroupName).GroupVersion.Version},
 			internalGroupVersion: certificates.SchemeGroupVersion,
 			internalTypes:        api.Scheme.KnownTypes(certificates.SchemeGroupVersion),
+		}
+	}
+	if _, ok := Groups[componentconfig.GroupName]; !ok {
+		Groups[componentconfig.GroupName] = TestGroup{
+			externalGroupVersion: unversioned.GroupVersion{Group: componentconfig.GroupName, Version: registered.GroupOrDie(componentconfig.GroupName).GroupVersion.Version},
+			internalGroupVersion: componentconfig.SchemeGroupVersion,
+			internalTypes:        api.Scheme.KnownTypes(componentconfig.SchemeGroupVersion),
 		}
 	}
 

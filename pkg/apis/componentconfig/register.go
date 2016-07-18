@@ -17,6 +17,7 @@ limitations under the License.
 package componentconfig
 
 import (
+	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/runtime"
 )
@@ -47,6 +48,8 @@ func addKnownTypes(scheme *runtime.Scheme) {
 		&KubeProxyConfiguration{},
 		&KubeSchedulerConfiguration{},
 		&KubeletConfiguration{},
+		&api.ListOptions{},
+		&api.DeleteOptions{},
 	)
 }
 
