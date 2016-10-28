@@ -2,6 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
+load("//build-tools:go.bzl", "go_genrule")
 load(
     "@io_bazel_rules_go//go:def.bzl",
     "go_binary",
@@ -25,10 +26,9 @@ go_test(
     deps = [],
 )
 
-genrule(
+go_genrule(
     name = "set-gen",
     srcs = [
-        "//pkg/util/sets/types:types.go",
         "//hack/boilerplate:boilerplate.go.txt",
     ],
     outs = [
@@ -46,6 +46,9 @@ $(location //cmd/libs/go2idl/set-gen) \
     --go-header-file $(location //hack/boilerplate:boilerplate.go.txt) \
     --output-package sets
     """,
+    go_deps = [
+        "//pkg/util/sets/types:go_default_library",
+    ],
     tools = [
         "//cmd/libs/go2idl/set-gen",
     ],
