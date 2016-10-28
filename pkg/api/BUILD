@@ -2,6 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
+load("//build-tools:go.bzl", "go_genrule")
 load(
     "@io_bazel_rules_go//go:def.bzl",
     "go_binary",
@@ -116,5 +117,40 @@ go_test(
         "//vendor:github.com/google/gofuzz",
         "//vendor:github.com/spf13/pflag",
         "//vendor:github.com/ugorji/go/codec",
+    ],
+)
+
+go_genrule(
+    name = "client-gen",
+    srcs = [
+        "//hack/boilerplate:boilerplate.go.txt",
+    ],
+    outs = [
+        "byte.go",
+    ],
+    cmd = """
+$(location //cmd/libs/go2idl/client-gen) \
+    --output-base $(GENDIR)/ \
+    --go-header-file $(location //hack/boilerplate:boilerplate.go.txt)
+    """,
+    go_deps = [
+        ":go_default_library",
+        "//pkg/apis/apps:go_default_library",
+        "//pkg/apis/authentication:go_default_library",
+        "//pkg/apis/authorization:go_default_library",
+        "//pkg/apis/autoscaling:go_default_library",
+        "//pkg/apis/batch:go_default_library",
+        "//pkg/apis/certificates:go_default_library",
+        "//pkg/apis/extensions:go_default_library",
+        "//pkg/apis/policy:go_default_library",
+        "//pkg/apis/rbac:go_default_library",
+        "//pkg/apis/storage:go_default_library",
+        "//pkg/watch:go_default_library",
+        "//pkg/apimachinery/registered:go_default_library",
+        "//pkg/util/sets:go_default_library",
+        "//vendor:github.com/golang/glog",
+    ],
+    tools = [
+        "//cmd/libs/go2idl/client-gen",
     ],
 )
