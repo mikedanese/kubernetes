@@ -79,7 +79,6 @@ func RunCertificateApprove(f cmdutil.Factory, out io.Writer, cmd *cobra.Command,
 			if c.Type == certificates.CertificateApproved {
 				alreadyApproved = true
 			}
-
 		}
 		if alreadyApproved {
 			return csr, "approved"
