@@ -12,11 +12,7 @@ load(
 
 go_library(
     name = "go_default_library",
-    srcs = [
-        "zz_generated.localsubjectaccessreview.go",
-        "zz_generated.selfsubjectaccessreview.go",
-        "zz_generated.subjectaccessreview.go",
-    ],
+    srcs = ["zz_generated.listers.go"],
     tags = ["automanaged"],
     deps = [
         "//pkg/api/errors:go_default_library",

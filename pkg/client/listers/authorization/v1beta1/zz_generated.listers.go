@@ -20,6 +20,7 @@ package v1beta1
 
 import (
 	"k8s.io/kubernetes/pkg/api/errors"
+	v1 "k8s.io/kubernetes/pkg/api/v1"
 	authorization "k8s.io/kubernetes/pkg/apis/authorization"
 	v1beta1 "k8s.io/kubernetes/pkg/apis/authorization/v1beta1"
 	"k8s.io/kubernetes/pkg/client/cache"
@@ -90,4 +91,82 @@ func (s localSubjectAccessReviewNamespaceLister) Get(name string) (*v1beta1.Loca
 		return nil, errors.NewNotFound(authorization.Resource("localsubjectaccessreview"), name)
 	}
 	return obj.(*v1beta1.LocalSubjectAccessReview), nil
+}
+
+// SelfSubjectAccessReviewLister helps list SelfSubjectAccessReviews.
+type SelfSubjectAccessReviewLister interface {
+	// List lists all SelfSubjectAccessReviews in the indexer.
+	List(selector labels.Selector) (ret []*v1beta1.SelfSubjectAccessReview, err error)
+	// Get retrieves the SelfSubjectAccessReview from the index for a given name.
+	Get(name string) (*v1beta1.SelfSubjectAccessReview, error)
+}
+
+// selfSubjectAccessReviewLister implements the SelfSubjectAccessReviewLister interface.
+type selfSubjectAccessReviewLister struct {
+	indexer cache.Indexer
+}
+
+// NewSelfSubjectAccessReviewLister returns a new SelfSubjectAccessReviewLister.
+func NewSelfSubjectAccessReviewLister(indexer cache.Indexer) SelfSubjectAccessReviewLister {
+	return &selfSubjectAccessReviewLister{indexer: indexer}
+}
+
+// List lists all SelfSubjectAccessReviews in the indexer.
+func (s *selfSubjectAccessReviewLister) List(selector labels.Selector) (ret []*v1beta1.SelfSubjectAccessReview, err error) {
+	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
+		ret = append(ret, m.(*v1beta1.SelfSubjectAccessReview))
+	})
+	return ret, err
+}
+
+// Get retrieves the SelfSubjectAccessReview from the index for a given name.
+func (s *selfSubjectAccessReviewLister) Get(name string) (*v1beta1.SelfSubjectAccessReview, error) {
+	key := &v1beta1.SelfSubjectAccessReview{ObjectMeta: v1.ObjectMeta{Name: name}}
+	obj, exists, err := s.indexer.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, errors.NewNotFound(authorization.Resource("selfsubjectaccessreview"), name)
+	}
+	return obj.(*v1beta1.SelfSubjectAccessReview), nil
+}
+
+// SubjectAccessReviewLister helps list SubjectAccessReviews.
+type SubjectAccessReviewLister interface {
+	// List lists all SubjectAccessReviews in the indexer.
+	List(selector labels.Selector) (ret []*v1beta1.SubjectAccessReview, err error)
+	// Get retrieves the SubjectAccessReview from the index for a given name.
+	Get(name string) (*v1beta1.SubjectAccessReview, error)
+}
+
+// subjectAccessReviewLister implements the SubjectAccessReviewLister interface.
+type subjectAccessReviewLister struct {
+	indexer cache.Indexer
+}
+
+// NewSubjectAccessReviewLister returns a new SubjectAccessReviewLister.
+func NewSubjectAccessReviewLister(indexer cache.Indexer) SubjectAccessReviewLister {
+	return &subjectAccessReviewLister{indexer: indexer}
+}
+
+// List lists all SubjectAccessReviews in the indexer.
+func (s *subjectAccessReviewLister) List(selector labels.Selector) (ret []*v1beta1.SubjectAccessReview, err error) {
+	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
+		ret = append(ret, m.(*v1beta1.SubjectAccessReview))
+	})
+	return ret, err
+}
+
+// Get retrieves the SubjectAccessReview from the index for a given name.
+func (s *subjectAccessReviewLister) Get(name string) (*v1beta1.SubjectAccessReview, error) {
+	key := &v1beta1.SubjectAccessReview{ObjectMeta: v1.ObjectMeta{Name: name}}
+	obj, exists, err := s.indexer.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, errors.NewNotFound(authorization.Resource("subjectaccessreview"), name)
+	}
+	return obj.(*v1beta1.SubjectAccessReview), nil
 }

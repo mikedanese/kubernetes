@@ -12,12 +12,7 @@ load(
 
 go_library(
     name = "go_default_library",
-    srcs = [
-        "zz_generated.clusterrole.go",
-        "zz_generated.clusterrolebinding.go",
-        "zz_generated.role.go",
-        "zz_generated.rolebinding.go",
-    ],
+    srcs = ["zz_generated.listers.go"],
     tags = ["automanaged"],
     deps = [
         "//pkg/api:go_default_library",

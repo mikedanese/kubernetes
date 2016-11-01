@@ -25,6 +25,72 @@ import (
 	"k8s.io/kubernetes/pkg/labels"
 )
 
+// JobLister helps list Jobs.
+type JobLister interface {
+	// List lists all Jobs in the indexer.
+	List(selector labels.Selector) (ret []*batch.Job, err error)
+	// Jobs returns an object that can list and get Jobs.
+	Jobs(namespace string) JobNamespaceLister
+}
+
+// jobLister implements the JobLister interface.
+type jobLister struct {
+	indexer cache.Indexer
+}
+
+// NewJobLister returns a new JobLister.
+func NewJobLister(indexer cache.Indexer) JobLister {
+	return &jobLister{indexer: indexer}
+}
+
+// List lists all Jobs in the indexer.
+func (s *jobLister) List(selector labels.Selector) (ret []*batch.Job, err error) {
+	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
+		ret = append(ret, m.(*batch.Job))
+	})
+	return ret, err
+}
+
+// Jobs returns an object that can list and get Jobs.
+func (s *jobLister) Jobs(namespace string) JobNamespaceLister {
+	return jobNamespaceLister{indexer: s.indexer, namespace: namespace}
+}
+
+// JobNamespaceLister helps list and get Jobs.
+type JobNamespaceLister interface {
+	// List lists all Jobs in the indexer for a given namespace.
+	List(selector labels.Selector) (ret []*batch.Job, err error)
+	// Get retrieves the Job from the indexer for a given namespace and name.
+	Get(name string) (*batch.Job, error)
+}
+
+// jobNamespaceLister implements the JobNamespaceLister
+// interface.
+type jobNamespaceLister struct {
+	indexer   cache.Indexer
+	namespace string
+}
+
+// List lists all Jobs in the indexer for a given namespace.
+func (s jobNamespaceLister) List(selector labels.Selector) (ret []*batch.Job, err error) {
+	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
+		ret = append(ret, m.(*batch.Job))
+	})
+	return ret, err
+}
+
+// Get retrieves the Job from the indexer for a given namespace and name.
+func (s jobNamespaceLister) Get(name string) (*batch.Job, error) {
+	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, errors.NewNotFound(batch.Resource("job"), name)
+	}
+	return obj.(*batch.Job), nil
+}
+
 // ScheduledJobLister helps list ScheduledJobs.
 type ScheduledJobLister interface {
 	// List lists all ScheduledJobs in the indexer.

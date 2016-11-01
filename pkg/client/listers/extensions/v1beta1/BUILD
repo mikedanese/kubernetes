@@ -12,16 +12,7 @@ load(
 
 go_library(
     name = "go_default_library",
-    srcs = [
-        "zz_generated.daemonset.go",
-        "zz_generated.deployment.go",
-        "zz_generated.ingress.go",
-        "zz_generated.job.go",
-        "zz_generated.podsecuritypolicy.go",
-        "zz_generated.replicaset.go",
-        "zz_generated.scale.go",
-        "zz_generated.thirdpartyresource.go",
-    ],
+    srcs = ["zz_generated.listers.go"],
     tags = ["automanaged"],
     deps = [
         "//pkg/api/errors:go_default_library",

@@ -12,7 +12,7 @@ load(
 
 go_library(
     name = "go_default_library",
-    srcs = ["zz_generated.certificatesigningrequest.go"],
+    srcs = ["zz_generated.listers.go"],
     tags = ["automanaged"],
     deps = [
         "//pkg/api:go_default_library",

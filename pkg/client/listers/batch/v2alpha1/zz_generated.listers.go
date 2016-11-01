@@ -91,3 +91,69 @@ func (s jobNamespaceLister) Get(name string) (*v2alpha1.Job, error) {
 	}
 	return obj.(*v2alpha1.Job), nil
 }
+
+// ScheduledJobLister helps list ScheduledJobs.
+type ScheduledJobLister interface {
+	// List lists all ScheduledJobs in the indexer.
+	List(selector labels.Selector) (ret []*v2alpha1.ScheduledJob, err error)
+	// ScheduledJobs returns an object that can list and get ScheduledJobs.
+	ScheduledJobs(namespace string) ScheduledJobNamespaceLister
+}
+
+// scheduledJobLister implements the ScheduledJobLister interface.
+type scheduledJobLister struct {
+	indexer cache.Indexer
+}
+
+// NewScheduledJobLister returns a new ScheduledJobLister.
+func NewScheduledJobLister(indexer cache.Indexer) ScheduledJobLister {
+	return &scheduledJobLister{indexer: indexer}
+}
+
+// List lists all ScheduledJobs in the indexer.
+func (s *scheduledJobLister) List(selector labels.Selector) (ret []*v2alpha1.ScheduledJob, err error) {
+	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
+		ret = append(ret, m.(*v2alpha1.ScheduledJob))
+	})
+	return ret, err
+}
+
+// ScheduledJobs returns an object that can list and get ScheduledJobs.
+func (s *scheduledJobLister) ScheduledJobs(namespace string) ScheduledJobNamespaceLister {
+	return scheduledJobNamespaceLister{indexer: s.indexer, namespace: namespace}
+}
+
+// ScheduledJobNamespaceLister helps list and get ScheduledJobs.
+type ScheduledJobNamespaceLister interface {
+	// List lists all ScheduledJobs in the indexer for a given namespace.
+	List(selector labels.Selector) (ret []*v2alpha1.ScheduledJob, err error)
+	// Get retrieves the ScheduledJob from the indexer for a given namespace and name.
+	Get(name string) (*v2alpha1.ScheduledJob, error)
+}
+
+// scheduledJobNamespaceLister implements the ScheduledJobNamespaceLister
+// interface.
+type scheduledJobNamespaceLister struct {
+	indexer   cache.Indexer
+	namespace string
+}
+
+// List lists all ScheduledJobs in the indexer for a given namespace.
+func (s scheduledJobNamespaceLister) List(selector labels.Selector) (ret []*v2alpha1.ScheduledJob, err error) {
+	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
+		ret = append(ret, m.(*v2alpha1.ScheduledJob))
+	})
+	return ret, err
+}
+
+// Get retrieves the ScheduledJob from the indexer for a given namespace and name.
+func (s scheduledJobNamespaceLister) Get(name string) (*v2alpha1.ScheduledJob, error) {
+	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, errors.NewNotFound(batch.Resource("scheduledjob"), name)
+	}
+	return obj.(*v2alpha1.ScheduledJob), nil
+}
