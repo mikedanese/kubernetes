@@ -119,23 +119,25 @@ func Packages(context *generator.Context, arguments *args.GeneratorArgs) generat
 			PackagePath: filepath.Join(arguments.OutputPackagePath, strings.ToLower(gv.Group.NonEmpty()), strings.ToLower(gv.Version.NonEmpty())),
 			HeaderText:  boilerplate,
 			GeneratorFunc: func(c *generator.Context) (generators []generator.Generator) {
+				var ts []*types.Type
 				for _, t := range p.Types {
 					// filter out types which dont have genclient=true.
 					if extractBoolTagOrDie("genclient", t.SecondClosestCommentLines) == false {
 						continue
 					}
-					generators = append(generators, &listerGenerator{
-						DefaultGen: generator.DefaultGen{
-							OptionalName: arguments.OutputFileBaseName + "." + strings.ToLower(t.Name.Name),
-						},
-						outputPackage:  arguments.OutputPackagePath,
-						groupVersion:   gv,
-						internalGVPkg:  internalGVPkg,
-						typeToGenerate: t,
-						imports:        generator.NewImportTracker(),
-						objectMeta:     objectMeta,
-					})
+					ts = append(ts, t)
 				}
+				generators = append(generators, &listerGenerator{
+					DefaultGen: generator.DefaultGen{
+						OptionalName: arguments.OutputFileBaseName + ".listers",
+					},
+					outputPackage:   arguments.OutputPackagePath,
+					groupVersion:    gv,
+					internalGVPkg:   internalGVPkg,
+					typesToGenerate: ts,
+					imports:         generator.NewImportTracker(),
+					objectMeta:      objectMeta,
+				})
 				return generators
 			},
 			FilterFunc: func(c *generator.Context, t *types.Type) bool {
@@ -178,18 +180,23 @@ func isInternal(t *types.Type) bool {
 // type.
 type listerGenerator struct {
 	generator.DefaultGen
-	outputPackage  string
-	groupVersion   clientgentypes.GroupVersion
-	internalGVPkg  string
-	typeToGenerate *types.Type
-	imports        namer.ImportTracker
-	objectMeta     *types.Type
+	outputPackage   string
+	groupVersion    clientgentypes.GroupVersion
+	internalGVPkg   string
+	typesToGenerate []*types.Type
+	imports         namer.ImportTracker
+	objectMeta      *types.Type
 }
 
 var _ generator.Generator = &listerGenerator{}
 
 func (g *listerGenerator) Filter(c *generator.Context, t *types.Type) bool {
-	return t == g.typeToGenerate
+	for _, ok := range g.typesToGenerate {
+		if t == ok {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *listerGenerator) Namers(c *generator.Context) namer.NameSystems {
