@@ -612,3 +612,31 @@ func TestNumberReadyStatus(t *testing.T) {
 		t.Errorf("Wrong daemon %s status: %v", daemon.Name, daemon.Status)
 	}
 }
+
+func TestNodeTaintDaemonDoesntLaunchIntolerantPods(t *testing.T) {
+	manager, podControl := newTestController()
+	node := newNode("", nil)
+	node.ObjectMeta.Annotations = map[string]string{
+		v1.TaintsAnnotationKey: `[{"key":"dedictated","value":"master","effect":"NoSchedule"}]`,
+	}
+	manager.nodeStore.Store.Add(node)
+	daemon := newDaemonSet("foo")
+	manager.dsStore.Add(daemon)
+	syncAndValidateDaemonSets(t, manager, daemon, podControl, 0, 0)
+}
+
+func TestNodeTaintDaemonLaunchesTolerantPods(t *testing.T) {
+	manager, podControl := newTestController()
+	node := newNode("", nil)
+	node.ObjectMeta.Annotations = map[string]string{
+		v1.TaintsAnnotationKey: `[{"key":"dedictated","value":"master","effect":"NoSchedule"}]`,
+	}
+	manager.nodeStore.Store.Add(node)
+	daemon := newDaemonSet("foo")
+	daemon.Spec.Template.ObjectMeta.Annotations = map[string]string{
+		v1.TolerationsAnnotationKey: `[{"key":"dedictated","operator":"Equal","value":"master","effect":"NoSchedule"}]`,
+	}
+
+	manager.dsStore.Add(daemon)
+	syncAndValidateDaemonSets(t, manager, daemon, podControl, 1, 0)
+}

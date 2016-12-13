@@ -673,7 +673,9 @@ func (dsc *DaemonSetsController) syncDaemonSet(key string) error {
 //     Returns true when a daemonset should continue running on a node if a daemonset pod is already
 //     running on that node.
 func (dsc *DaemonSetsController) nodeShouldRunDaemonPod(node *v1.Node, ds *extensions.DaemonSet) (wantToRun, shouldSchedule, shouldContinueRunning bool, err error) {
+	// only set these to false
 	wantToRun, shouldSchedule, shouldContinueRunning = true, true, true
+
 	// If the daemon set specifies a node name, check that it matches with node.Name.
 	if !(ds.Spec.Template.Spec.NodeName == "" || ds.Spec.Template.Spec.NodeName == node.Name) {
 		wantToRun, shouldSchedule, shouldContinueRunning = false, false, false
@@ -763,6 +765,45 @@ func (dsc *DaemonSetsController) nodeShouldRunDaemonPod(node *v1.Node, ds *exten
 			}
 		}
 	}
+
+	taints, err := nodeInfo.Taints()
+	if err != nil {
+		return false, false, false, err
+	}
+	if len(taints) == 0 {
+		return
+	}
+
+	tolerations, err := v1.GetTolerationsFromPodAnnotations(ds.Spec.Template.ObjectMeta.Annotations)
+	if err != nil {
+		return false, false, false, err
+	}
+	if len(tolerations) == 0 {
+		return false, false, false, nil
+	}
+
+	taintAllowSchedule, taintAllowRun := false, false
+	for _, taint := range taints {
+		for _, toleration := range tolerations {
+			if !v1.TolerationToleratesTaint(&toleration, &taint) {
+				continue
+			}
+			switch taint.Effect {
+			case v1.TaintEffectNoSchedule:
+				taintAllowRun = true
+			case v1.TaintEffectPreferNoSchedule:
+				taintAllowSchedule, taintAllowRun = true, true
+			}
+		}
+	}
+
+	if !taintAllowSchedule && shouldSchedule {
+		shouldSchedule = false
+	}
+	if !taintAllowRun && shouldContinueRunning {
+		shouldContinueRunning = false
+	}
+
 	return
 }
 
