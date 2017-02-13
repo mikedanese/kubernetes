@@ -24,8 +24,8 @@ import (
 	"k8s.io/apimachinery/pkg/apimachinery/announced"
 	"k8s.io/apimachinery/pkg/apimachinery/registered"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/install"
-	"k8s.io/kubernetes/pkg/api"
 	kapitesting "k8s.io/kubernetes/pkg/api/testing"
 )
 
@@ -36,10 +36,13 @@ const (
 func TestRoundTripTypes(t *testing.T) {
 
 	groupFactoryRegistry := make(announced.APIGroupFactoryRegistry)
-	registry := registered.NewOrDie("kubeadmtest")
+	registry := registered.NewOrDie("")
 	scheme := runtime.NewScheme()
+	codecs := serializer.NewCodecFactory(scheme)
 
 	install.Install(groupFactoryRegistry, registry, scheme)
-	fuzzer := apitesting.FuzzerFor(kapitesting.FuzzerFuncs(t, api.Codecs), rand.NewSource(seed))
-	apitesting.RoundTripTypesWithoutProtobuf(t, scheme, api.Codecs, fuzzer, nil)
+	// TODO: once we've pulled kubeadm types of the main scheme, we should
+	// move the fuzzers funcs here
+	fuzzer := apitesting.FuzzerFor(kapitesting.FuzzerFuncs(t, codecs), rand.NewSource(seed))
+	apitesting.RoundTripTypesWithoutProtobuf(t, scheme, codecs, fuzzer, nil)
 }
