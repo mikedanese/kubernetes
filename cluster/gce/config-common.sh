@@ -17,10 +17,7 @@
 # Vars assumed:
 #   NUM_NODES
 function get-master-size {
-  local suggested_master_size=1
-  if [[ "${NUM_NODES}" -gt "5" ]]; then
-    suggested_master_size=2
-  fi
+  local suggested_master_size=2
   if [[ "${NUM_NODES}" -gt "10" ]]; then
     suggested_master_size=4
   fi
