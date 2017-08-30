@@ -88,11 +88,13 @@ pkg_tar(
 
 k8s_deb(
     name = "cloud-controller-manager",
+    version_file = "//build:os_package_version",
     description = "Kubernetes Cloud Controller Manager",
 )
 
 k8s_deb(
     name = "kubectl",
+    version_file = "//build:os_package_version",
     description = """Kubernetes Command Line Tool
 The Kubernetes command line tool for interacting with the Kubernetes API.
 """,
@@ -100,21 +102,25 @@ The Kubernetes command line tool for interacting with the Kubernetes API.
 
 k8s_deb(
     name = "kube-apiserver",
+    version_file = "//build:os_package_version",
     description = "Kubernetes API Server",
 )
 
 k8s_deb(
     name = "kube-controller-manager",
+    version_file = "//build:os_package_version",
     description = "Kubernetes Controller Manager",
 )
 
 k8s_deb(
     name = "kube-scheduler",
+    version_file = "//build:os_package_version",
     description = "Kubernetes Scheduler",
 )
 
 k8s_deb(
     name = "kube-proxy",
+    version_file = "//build:os_package_version",
     depends = [
         "iptables (>= 1.4.21)",
         "iproute2",
@@ -124,6 +130,7 @@ k8s_deb(
 
 k8s_deb(
     name = "kubelet",
+    version_file = "//build:os_package_version",
     depends = [
         "iptables (>= 1.4.21)",
         "kubernetes-cni (>= 0.3.0.1)",
@@ -141,6 +148,7 @@ The node agent of Kubernetes, the container cluster manager
 
 k8s_deb(
     name = "kubeadm",
+    version_file = "//build:os_package_version",
     depends = [
         "kubelet (>= 1.4.0)",
         "kubectl (>= 1.4.0)",
@@ -152,6 +160,7 @@ The Kubernetes command line tool for bootstrapping a Kubernetes cluster.
 
 k8s_deb(
     name = "kubernetes-cni",
+    version_file = "//build:os_package_version",
     description = """Kubernetes Packaging of CNI
 The Container Networking Interface tools for provisioning container networks.
 """,
