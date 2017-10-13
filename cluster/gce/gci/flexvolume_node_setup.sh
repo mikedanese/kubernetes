@@ -80,7 +80,7 @@ flex_clean() {
   umount_silent ${MOUNTER_PATH}/var/lib/kubelet
   umount_silent ${MOUNTER_PATH}
   rm -rf ${MOUNTER_PATH}
-  
+
   if [ -n ${IMAGE_URL:-} ]; then
     docker rmi -f ${IMAGE_URL} &> /dev/null || /bin/true
   fi
@@ -98,7 +98,7 @@ generate_chroot_wrapper() {
     echo "Failed to set up FlexVolume driver: cannot find directory '/flexvolume' in the mount utility image."
     exit 1
   fi
-  
+
   for driver_dir in ${MOUNTER_PATH}/flexvolume/*; do
     if [ -d "$driver_dir" ]; then
 
@@ -107,7 +107,7 @@ generate_chroot_wrapper() {
         echo "ERROR: Expected 1 file in the FlexVolume directory but found $filecount."
         exit 1
       fi
-      
+
       driver_file=$( ls $driver_dir | head -n 1 )
 
       # driver_path points to the actual driver inside the mount utility image,
@@ -133,14 +133,14 @@ echo
 echo "Importing mount utility image from Container Registry..."
 echo
 
+
 METADATA=http://metadata.google.internal/computeMetadata/v1
 SVC_ACCT_ENDPOINT=$METADATA/instance/service-accounts/default
 ACCESS_TOKEN=$(curl -s -H 'Metadata-Flavor: Google' $SVC_ACCT_ENDPOINT/token | cut -d'"' -f 4)
 PROJECT_ID=$(curl -s -H 'Metadata-Flavor: Google' $METADATA/project/project-id)
 IMAGE_URL=gcr.io/${PROJECT_ID}/${MOUNTER_IMAGE}
 MOUNTER_DEFAULT_NAME=flexvolume_mounter
-sudo -u ${SUDO_USER} docker login -u _token -p $ACCESS_TOKEN https://gcr.io > /dev/null
-sudo -u ${SUDO_USER} docker run --name=${MOUNTER_DEFAULT_NAME} ${IMAGE_URL}
+docker run --name=${MOUNTER_DEFAULT_NAME} ${IMAGE_URL}
 docker export ${MOUNTER_DEFAULT_NAME} > /tmp/${MOUNTER_DEFAULT_NAME}.tar
 docker rm ${MOUNTER_DEFAULT_NAME} > /dev/null
 docker rmi ${IMAGE_URL} > /dev/null
