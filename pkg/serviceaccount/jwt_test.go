@@ -168,7 +168,7 @@ func TestTokenGenerateAndValidate(t *testing.T) {
 			Token:       rsaToken,
 			Client:      nil,
 			Keys:        []interface{}{},
-			ExpectedErr: false,
+			ExpectedErr: true,
 			ExpectedOK:  false,
 		},
 		"invalid keys (rsa)": {
@@ -256,7 +256,7 @@ func TestTokenGenerateAndValidate(t *testing.T) {
 		authenticator := serviceaccount.JWTTokenAuthenticator(tc.Keys, tc.Client != nil, getter)
 
 		// An invalid, non-JWT token should always fail
-		if _, ok, err := authenticator.AuthenticateToken("invalid token"); err != nil || ok {
+		if _, ok, err := authenticator.AuthenticateToken("invalid token"); err == nil || ok {
 			t.Errorf("%s: Expected err=nil, ok=false for non-JWT token", k)
 			continue
 		}
