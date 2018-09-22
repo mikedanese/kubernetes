@@ -287,6 +287,7 @@ func buildControllerRoles() ([]rbacv1.ClusterRole, []rbacv1.ClusterRoleBinding) 
 		ObjectMeta: metav1.ObjectMeta{Name: saRolePrefix + "service-account-controller"},
 		Rules: []rbacv1.PolicyRule{
 			rbacv1helpers.NewRule("create").Groups(legacyGroup).Resources("serviceaccounts").RuleOrDie(),
+			rbacv1helpers.NewRule("create").Groups(legacyGroup).Resources("configmaps").RuleOrDie(),
 			eventsRule(),
 		},
 	})

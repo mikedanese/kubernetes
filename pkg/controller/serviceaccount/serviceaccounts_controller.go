@@ -27,12 +27,14 @@ import (
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/controller"
+	kubefeatures "k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/util/metrics"
 )
 
@@ -50,6 +52,8 @@ type ServiceAccountsControllerOptions struct {
 	// If non-zero, all namespaces will be re-listed this often.
 	// Otherwise, re-list will be delayed as long as possible (until the watch is closed or times out).
 	NamespaceResync time.Duration
+
+	ConfigMaps []v1.ConfigMap
 }
 
 func DefaultServiceAccountsControllerOptions() ServiceAccountsControllerOptions {
@@ -61,11 +65,12 @@ func DefaultServiceAccountsControllerOptions() ServiceAccountsControllerOptions 
 }
 
 // NewServiceAccountsController returns a new *ServiceAccountsController.
-func NewServiceAccountsController(saInformer coreinformers.ServiceAccountInformer, nsInformer coreinformers.NamespaceInformer, cl clientset.Interface, options ServiceAccountsControllerOptions) (*ServiceAccountsController, error) {
+func NewServiceAccountsController(saInformer coreinformers.ServiceAccountInformer, nsInformer coreinformers.NamespaceInformer, cmInformer coreinformers.ConfigMapInformer, cl clientset.Interface, options ServiceAccountsControllerOptions) (*ServiceAccountsController, error) {
 	e := &ServiceAccountsController{
 		client:                  cl,
 		serviceAccountsToEnsure: options.ServiceAccounts,
-		queue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "serviceaccount"),
+		configMapsToEnsure:      options.ConfigMaps,
+		queue:                   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "serviceaccount"),
 	}
 	if cl != nil && cl.CoreV1().RESTClient().GetRateLimiter() != nil {
 		if err := metrics.RegisterMetricAndTrackRateLimiterUsage("serviceaccount_controller", cl.CoreV1().RESTClient().GetRateLimiter()); err != nil {
@@ -86,6 +91,12 @@ func NewServiceAccountsController(saInformer coreinformers.ServiceAccountInforme
 	e.nsLister = nsInformer.Lister()
 	e.nsListerSynced = nsInformer.Informer().HasSynced
 
+	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.ServiceAccountProjectedToken) {
+		cmInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{})
+		e.cmLister = cmInformer.Lister()
+		e.cmListerSynced = cmInformer.Informer().HasSynced
+	}
+
 	e.syncHandler = e.syncNamespace
 
 	return e, nil
@@ -95,6 +106,7 @@ func NewServiceAccountsController(saInformer coreinformers.ServiceAccountInforme
 type ServiceAccountsController struct {
 	client                  clientset.Interface
 	serviceAccountsToEnsure []v1.ServiceAccount
+	configMapsToEnsure      []v1.ConfigMap
 
 	// To allow injection for testing.
 	syncHandler func(key string) error
@@ -104,6 +116,9 @@ type ServiceAccountsController struct {
 
 	nsLister       corelisters.NamespaceLister
 	nsListerSynced cache.InformerSynced
+
+	cmLister       corelisters.ConfigMapLister
+	cmListerSynced cache.InformerSynced
 
 	queue workqueue.RateLimitingInterface
 }
@@ -115,7 +130,7 @@ func (c *ServiceAccountsController) Run(workers int, stopCh <-chan struct{}) {
 	glog.Infof("Starting service account controller")
 	defer glog.Infof("Shutting down service account controller")
 
-	if !controller.WaitForCacheSync("service account", stopCh, c.saListerSynced, c.nsListerSynced) {
+	if !controller.WaitForCacheSync("service account", stopCh, c.saListerSynced, c.nsListerSynced, c.cmListerSynced) {
 		return
 	}
 
@@ -180,6 +195,7 @@ func (c *ServiceAccountsController) processNextWorkItem() bool {
 
 	return true
 }
+
 func (c *ServiceAccountsController) syncNamespace(key string) error {
 	startTime := time.Now()
 	defer func() {
@@ -214,6 +230,24 @@ func (c *ServiceAccountsController) syncNamespace(key string) error {
 
 		if _, err := c.client.CoreV1().ServiceAccounts(ns.Name).Create(&sa); err != nil && !apierrs.IsAlreadyExists(err) {
 			createFailures = append(createFailures, err)
+		}
+	}
+
+	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.ServiceAccountProjectedToken) {
+		for i := range c.configMapsToEnsure {
+			cm := c.configMapsToEnsure[i]
+			switch _, err := c.cmLister.ConfigMaps(ns.Name).Get(cm.Name); {
+			case err == nil:
+				continue
+			case apierrs.IsNotFound(err):
+			case err != nil:
+				return err
+			}
+			cm.Namespace = ns.Name
+
+			if _, err := c.client.CoreV1().ConfigMaps(ns.Name).Create(&cm); err != nil && !apierrs.IsAlreadyExists(err) {
+				createFailures = append(createFailures, err)
+			}
 		}
 	}
 

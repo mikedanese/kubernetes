@@ -471,7 +471,7 @@ ROTATE_CERTIFICATES="${ROTATE_CERTIFICATES:-}"
 CONCURRENT_SERVICE_SYNCS="${CONCURRENT_SERVICE_SYNCS:-}"
 
 if [[ "${ENABLE_TOKENREQUEST:-}" == "true" ]]; then
-  FEATURE_GATES="${FEATURE_GATES},TokenRequest=true"
+  FEATURE_GATES="${FEATURE_GATES},TokenRequest=true,TokenRequestProjection=true,ServiceAccountProjectedToken=true"
   SERVICEACCOUNT_ISSUER="https://kubernetes.io/${CLUSTER_NAME}"
   SERVICEACCOUNT_API_AUDIENCES="https://kubernetes.default.svc"
 fi

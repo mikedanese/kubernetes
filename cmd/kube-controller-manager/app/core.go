@@ -22,20 +22,20 @@ package app
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
-	"github.com/golang/glog"
-
-	"net/http"
-
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	cacheddiscovery "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/dynamic"
 	clientset "k8s.io/client-go/kubernetes"
+	certutil "k8s.io/client-go/util/cert"
 	csiclientset "k8s.io/csi-api/pkg/client/clientset/versioned"
 	"k8s.io/kubernetes/pkg/controller"
 	endpointcontroller "k8s.io/kubernetes/pkg/controller/endpoint"
@@ -58,9 +58,12 @@ import (
 	"k8s.io/kubernetes/pkg/controller/volume/pvcprotection"
 	"k8s.io/kubernetes/pkg/controller/volume/pvprotection"
 	"k8s.io/kubernetes/pkg/features"
+	kubefeatures "k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/quota/generic"
 	quotainstall "k8s.io/kubernetes/pkg/quota/install"
 	"k8s.io/kubernetes/pkg/util/metrics"
+
+	"github.com/golang/glog"
 )
 
 func startServiceController(ctx ControllerContext) (http.Handler, bool, error) {
@@ -332,11 +335,30 @@ func startNamespaceController(ctx ControllerContext) (http.Handler, bool, error)
 }
 
 func startServiceAccountController(ctx ControllerContext) (http.Handler, bool, error) {
+	opts := serviceaccountcontroller.DefaultServiceAccountsControllerOptions()
+	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.ServiceAccountProjectedToken) {
+		rootCA, err := ioutil.ReadFile(ctx.ComponentConfig.SAController.RootCAFile)
+		if err != nil {
+			return nil, true, fmt.Errorf("error reading root-ca-file at %s: %v", ctx.ComponentConfig.SAController.RootCAFile, err)
+		}
+		if _, err := certutil.ParseCertsPEM(rootCA); err != nil {
+			return nil, true, fmt.Errorf("error parsing root-ca-file at %s: %v", ctx.ComponentConfig.SAController.RootCAFile, err)
+		}
+		opts.ConfigMaps = []v1.ConfigMap{
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "kube-cacrt"},
+				BinaryData: map[string][]byte{
+					"ca.crt": rootCA,
+				},
+			},
+		}
+	}
 	sac, err := serviceaccountcontroller.NewServiceAccountsController(
 		ctx.InformerFactory.Core().V1().ServiceAccounts(),
 		ctx.InformerFactory.Core().V1().Namespaces(),
+		ctx.InformerFactory.Core().V1().ConfigMaps(),
 		ctx.ClientBuilder.ClientOrDie("service-account-controller"),
-		serviceaccountcontroller.DefaultServiceAccountsControllerOptions(),
+		opts,
 	)
 	if err != nil {
 		return nil, true, fmt.Errorf("error creating ServiceAccount controller: %v", err)

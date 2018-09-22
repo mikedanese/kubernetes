@@ -32,11 +32,13 @@ import (
 	"k8s.io/apiserver/pkg/admission"
 	genericadmissioninitializer "k8s.io/apiserver/pkg/admission/initializer"
 	"k8s.io/apiserver/pkg/storage/names"
+	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	podutil "k8s.io/kubernetes/pkg/api/pod"
 	api "k8s.io/kubernetes/pkg/apis/core"
+	kubefeatures "k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/kubeapiserver/admission/util"
 	"k8s.io/kubernetes/pkg/serviceaccount"
 )
@@ -166,11 +168,20 @@ func (s *serviceAccount) Admit(a admission.Attributes) (err error) {
 		return admission.NewForbidden(a, fmt.Errorf("error looking up service account %s/%s: %v", a.GetNamespace(), pod.Spec.ServiceAccountName, err))
 	}
 	if s.MountServiceAccountToken && shouldAutomount(serviceAccount, pod) {
-		if err := s.mountServiceAccountToken(serviceAccount, pod); err != nil {
-			if _, ok := err.(errors.APIStatus); ok {
-				return err
+		if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.ServiceAccountProjectedToken) {
+			if err := s.mountServiceAccountTokenProjection(serviceAccount, pod); err != nil {
+				if _, ok := err.(errors.APIStatus); ok {
+					return err
+				}
+				return admission.NewForbidden(a, err)
 			}
-			return admission.NewForbidden(a, err)
+		} else {
+			if err := s.mountServiceAccountTokenSecret(serviceAccount, pod); err != nil {
+				if _, ok := err.(errors.APIStatus); ok {
+					return err
+				}
+				return admission.NewForbidden(a, err)
+			}
 		}
 	}
 	if len(pod.Spec.ImagePullSecrets) == 0 {
@@ -411,7 +422,7 @@ func (s *serviceAccount) limitSecretReferences(serviceAccount *corev1.ServiceAcc
 	return nil
 }
 
-func (s *serviceAccount) mountServiceAccountToken(serviceAccount *corev1.ServiceAccount, pod *api.Pod) error {
+func (s *serviceAccount) mountServiceAccountTokenSecret(serviceAccount *corev1.ServiceAccount, pod *api.Pod) error {
 	// Find the name of a referenced ServiceAccountToken secret we can mount
 	serviceAccountToken, err := s.getReferencedServiceAccountToken(serviceAccount)
 	if err != nil {
@@ -501,4 +512,106 @@ func (s *serviceAccount) mountServiceAccountToken(serviceAccount *corev1.Service
 		pod.Spec.Volumes = append(pod.Spec.Volumes, volume)
 	}
 	return nil
+}
+
+const ServiceAccountVolumeName = "kube-api-service-account-token"
+
+func (s *serviceAccount) mountServiceAccountTokenProjection(serviceAccount *corev1.ServiceAccount, pod *api.Pod) error {
+	// Find the volume and volume name for the ServiceAccountTokenProjection if it already exists
+	hasTokenVolume := false
+	allVolumeNames := sets.NewString()
+	for _, volume := range pod.Spec.Volumes {
+		allVolumeNames.Insert(volume.Name)
+		if volume.Name == ServiceAccountVolumeName {
+			hasTokenVolume = true
+			break
+		}
+	}
+
+	// Create the prototypical VolumeMount
+	volumeMount := api.VolumeMount{
+		Name:      ServiceAccountVolumeName,
+		ReadOnly:  true,
+		MountPath: DefaultAPITokenMountPath,
+	}
+
+	// Ensure every container mounts the APISecret volume
+	needsTokenVolume := false
+	for i, container := range pod.Spec.InitContainers {
+		existingContainerMount := false
+		for _, volumeMount := range container.VolumeMounts {
+			// Existing mounts at the default mount path prevent mounting of the API token
+			if volumeMount.MountPath == DefaultAPITokenMountPath {
+				existingContainerMount = true
+				break
+			}
+		}
+		if !existingContainerMount {
+			pod.Spec.InitContainers[i].VolumeMounts = append(pod.Spec.InitContainers[i].VolumeMounts, volumeMount)
+			needsTokenVolume = true
+		}
+	}
+	for i, container := range pod.Spec.Containers {
+		existingContainerMount := false
+		for _, volumeMount := range container.VolumeMounts {
+			// Existing mounts at the default mount path prevent mounting of the API token
+			if volumeMount.MountPath == DefaultAPITokenMountPath {
+				existingContainerMount = true
+				break
+			}
+		}
+		if !existingContainerMount {
+			pod.Spec.Containers[i].VolumeMounts = append(pod.Spec.Containers[i].VolumeMounts, volumeMount)
+			needsTokenVolume = true
+		}
+	}
+
+	// Add the volume if a container needs it
+	if !hasTokenVolume && needsTokenVolume {
+		pod.Spec.Volumes = append(pod.Spec.Volumes, serviceAccountTokenProjectedVolume)
+	}
+	return nil
+}
+
+var serviceAccountTokenProjectedVolume = api.Volume{
+	Name: ServiceAccountVolumeName,
+	VolumeSource: api.VolumeSource{
+		Projected: &api.ProjectedVolumeSource{
+			Sources: []api.VolumeProjection{
+				{
+					ServiceAccountToken: &api.ServiceAccountTokenProjection{
+						Path:              "token",
+						ExpirationSeconds: 60 * 60,
+						Audience:          "https://kubernetes.default.svc",
+					},
+				},
+				{
+					ConfigMap: &api.ConfigMapProjection{
+						LocalObjectReference: api.LocalObjectReference{
+							Name: "kube-cacrt",
+						},
+						Items: []api.KeyToPath{
+							{
+								Key:  "ca.crt",
+								Path: "ca.crt",
+							},
+						},
+					},
+				},
+				{
+					DownwardAPI: &api.DownwardAPIProjection{
+						Items: []api.DownwardAPIVolumeFile{
+							{
+								Path: "namespace",
+								FieldRef: &api.ObjectFieldSelector{
+									APIVersion: "v1",
+									FieldPath:  "metadata.namespace",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
 }
