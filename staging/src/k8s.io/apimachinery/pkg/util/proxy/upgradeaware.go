@@ -29,12 +29,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mxk/go-flowrate/flowrate"
+
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/h2stream"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-
-	"github.com/mxk/go-flowrate/flowrate"
 	"k8s.io/klog"
 )
 
@@ -184,6 +185,9 @@ func NewUpgradeAwareHandler(location *url.URL, transport http.RoundTripper, wrap
 
 // ServeHTTP handles the proxy request
 func (h *UpgradeAwareHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if h.tryH2Upgrade(w, req) {
+		return
+	}
 	if h.tryUpgrade(w, req) {
 		return
 	}
@@ -232,7 +236,6 @@ func (h *UpgradeAwareHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 	proxy.ServeHTTP(w, newReq)
 }
 
-// tryUpgrade returns true if the request was handled.
 func (h *UpgradeAwareHandler) tryUpgrade(w http.ResponseWriter, req *http.Request) bool {
 	if !httpstream.IsUpgradeRequest(req) {
 		klog.V(6).Infof("Request was not an upgrade")
@@ -339,6 +342,89 @@ func (h *UpgradeAwareHandler) tryUpgrade(w http.ResponseWriter, req *http.Reques
 	klog.V(6).Infof("Disconnecting from backend proxy %s\n  Headers: %v", &location, clone.Header)
 
 	return true
+}
+
+// tryUpgrade returns true if the request was handled.
+func (h *UpgradeAwareHandler) tryH2Upgrade(w http.ResponseWriter, req *http.Request) bool {
+	if !h2stream.IsH2StreamRequest(req) {
+		return false
+	}
+
+	location := *h.Location
+	if h.UseRequestLocation {
+		location = *req.URL
+		location.Scheme = h.Location.Scheme
+		location.Host = h.Location.Host
+	}
+
+	breq := utilnet.CloneRequest(req)
+	// Only append X-Forwarded-For in the upgrade path, since httputil.NewSingleHostReverseProxy
+	// handles this in the non-upgrade path.
+	utilnet.AppendForwardedForHeader(breq)
+
+	br, bw := io.Pipe()
+	breq.Body = ioutil.NopCloser(br)
+
+	bresp, err := http.DefaultClient.Do(breq)
+	if err != nil {
+		h.Responder.Error(w, req, fmt.Errorf("error creating backend connection: %v", err))
+		return true
+	}
+
+	for k, vs := range bresp.Header {
+		for _, v := range vs {
+			w.Header().Add(k, v)
+		}
+	}
+	w.WriteHeader(bresp.StatusCode)
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
+
+	h.proxyStream(h2stream.NewClientConn(bw, bresp), h2stream.NewServerConn(w, req))
+
+	klog.V(6).Infof("Disconnecting from backend proxy %s\n  Headers: %v", &location, breq.Header)
+	return true
+}
+
+func (h *UpgradeAwareHandler) proxyStream(f, b io.ReadWriter) {
+	// Proxy the connection. This is bidirectional, so we need a goroutine
+	// to copy in each direction. Once one side of the connection exits, we
+	// exit the function which performs cleanup and in the process closes
+	// the other half of the connection in the defer.
+	writerComplete := make(chan struct{})
+	readerComplete := make(chan struct{})
+
+	go func() {
+		var writer io.Writer = b
+		if h.MaxBytesPerSec > 0 {
+			writer = flowrate.NewWriter(writer, h.MaxBytesPerSec)
+		}
+		_, err := io.Copy(writer, f)
+		if err != nil && !strings.Contains(err.Error(), "use of closed network connection") {
+			klog.Errorf("Error proxying data from client to backend: %v", err)
+		}
+		close(writerComplete)
+	}()
+
+	go func() {
+		var reader io.Reader = f
+		if h.MaxBytesPerSec > 0 {
+			reader = flowrate.NewReader(reader, h.MaxBytesPerSec)
+		}
+		_, err := io.Copy(b, reader)
+		if err != nil && !strings.Contains(err.Error(), "use of closed network connection") {
+			klog.Errorf("Error proxying data from backend to client: %v", err)
+		}
+		close(readerComplete)
+	}()
+
+	// Wait for one half the connection to exit. Once it does the defer will
+	// clean up the other half of the connection.
+	select {
+	case <-writerComplete:
+	case <-readerComplete:
+	}
 }
 
 func (h *UpgradeAwareHandler) Dial(req *http.Request) (net.Conn, error) {

@@ -36,6 +36,7 @@ go_library(
     importpath = "k8s.io/apimachinery/pkg/util/proxy",
     deps = [
         "//staging/src/k8s.io/apimachinery/pkg/api/errors:go_default_library",
+        "//staging/src/k8s.io/apimachinery/pkg/util/h2stream:go_default_library",
         "//staging/src/k8s.io/apimachinery/pkg/util/httpstream:go_default_library",
         "//staging/src/k8s.io/apimachinery/pkg/util/net:go_default_library",
         "//staging/src/k8s.io/apimachinery/pkg/util/runtime:go_default_library",
