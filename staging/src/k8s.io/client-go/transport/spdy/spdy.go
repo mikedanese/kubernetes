@@ -85,7 +85,6 @@ func Negotiate(upgrader Upgrader, client *http.Client, req *http.Request, protoc
 	if err != nil {
 		return nil, "", fmt.Errorf("error sending request: %v", err)
 	}
-	defer resp.Body.Close()
 	conn, err := upgrader.NewConnection(resp)
 	if err != nil {
 		return nil, "", err

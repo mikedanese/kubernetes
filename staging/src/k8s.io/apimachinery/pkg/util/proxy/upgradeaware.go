@@ -19,6 +19,7 @@ package proxy
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,12 +30,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mxk/go-flowrate/flowrate"
+	"golang.org/x/net/http2"
+
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/h2stream"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-
-	"github.com/mxk/go-flowrate/flowrate"
 	"k8s.io/klog"
 )
 
@@ -184,6 +187,9 @@ func NewUpgradeAwareHandler(location *url.URL, transport http.RoundTripper, wrap
 
 // ServeHTTP handles the proxy request
 func (h *UpgradeAwareHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if h.tryH2Upgrade(w, req) {
+		return
+	}
 	if h.tryUpgrade(w, req) {
 		return
 	}
@@ -338,6 +344,34 @@ func (h *UpgradeAwareHandler) tryUpgrade(w http.ResponseWriter, req *http.Reques
 	}
 	klog.V(6).Infof("Disconnecting from backend proxy %s\n  Headers: %v", &location, clone.Header)
 
+	return true
+}
+
+// tryUpgrade returns true if the request was handled.
+func (h *UpgradeAwareHandler) tryH2Upgrade(w http.ResponseWriter, req *http.Request) bool {
+	if !h2stream.IsH2StreamRequest(req) {
+		return false
+	}
+
+	location := *h.Location
+	if h.UseRequestLocation {
+		location = *req.URL
+		location.Scheme = h.Location.Scheme
+		location.Host = h.Location.Host
+	}
+	req.URL = &location
+
+	rt := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	http2.ConfigureTransport(rt)
+
+	rp := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: h.Location.Scheme, Host: h.Location.Host})
+	rp.FlushInterval = 20 * time.Millisecond
+	rp.Transport = rt
+	rp.ServeHTTP(w, req)
 	return true
 }
 

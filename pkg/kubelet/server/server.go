@@ -37,6 +37,7 @@ import (
 	"github.com/google/cadvisor/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 
 	"k8s.io/api/core/v1"
@@ -157,6 +158,7 @@ func ListenAndServeKubeletReadOnlyServer(host HostInterface, resourceAnalyzer st
 		Handler:        &s,
 		MaxHeaderBytes: 1 << 20,
 	}
+	http2.ConfigureServer(server, nil)
 	klog.Fatal(server.ListenAndServe())
 }
 

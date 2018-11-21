@@ -42,6 +42,7 @@ filegroup(
         "//staging/src/k8s.io/apimachinery/pkg/util/duration:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/errors:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/framer:all-srcs",
+        "//staging/src/k8s.io/apimachinery/pkg/util/h2stream:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/httpstream:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/initialization:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/intstr:all-srcs",
