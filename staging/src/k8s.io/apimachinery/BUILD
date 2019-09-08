@@ -46,6 +46,7 @@ filegroup(
         "//staging/src/k8s.io/apimachinery/pkg/util/runtime:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/sets:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/strategicpatch:all-srcs",
+        "//staging/src/k8s.io/apimachinery/pkg/util/trace:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/uuid:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/validation:all-srcs",
         "//staging/src/k8s.io/apimachinery/pkg/util/version:all-srcs",
