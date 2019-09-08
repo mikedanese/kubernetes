@@ -366,6 +366,7 @@ replace (
 	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc2.0.20190611121236-6cc515888830
 	github.com/opencontainers/runtime-spec => github.com/opencontainers/runtime-spec v1.0.0
 	github.com/opencontainers/selinux => github.com/opencontainers/selinux v1.2.2
+	github.com/opentracing/opentracing-go => github.com/opentracing/opentracing-go v1.1.0
 	github.com/pborman/uuid => github.com/pborman/uuid v1.2.0
 	github.com/pelletier/go-toml => github.com/pelletier/go-toml v1.2.0
 	github.com/peterbourgon/diskv => github.com/peterbourgon/diskv v2.0.1+incompatible

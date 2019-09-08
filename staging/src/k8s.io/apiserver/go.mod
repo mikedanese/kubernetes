@@ -27,6 +27,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
+	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pborman/uuid v1.2.0
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20171018203845-0dec1b30a021 // indirect
