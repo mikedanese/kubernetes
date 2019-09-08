@@ -32,6 +32,31 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func roundTripStringID(tb testing.TB) (uint64, uint64) {
+	want := newID()
+	sid := toStringID(want)
+	got, err := fromStringID(sid)
+	if err != nil {
+		tb.Fatalf("error round tripping %d: sid=%q err=%v", want, sid, err)
+	}
+	return got, want
+}
+
+func TestStringIDRoundTrip(t *testing.T) {
+	for i := 0; i < 10000; i++ {
+		got, want := roundTripStringID(t)
+		if got != want {
+			t.Fatalf("round trip had different results: got=%d want=%d", got, want)
+		}
+	}
+}
+
+func BenchmarkStringIDRoundTrip(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		roundTripStringID(b)
+	}
+}
+
 func makeTree(n *traceNode, width, depth int) {
 	if depth == 0 {
 		return

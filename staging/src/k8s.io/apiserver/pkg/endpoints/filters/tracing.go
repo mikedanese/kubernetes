@@ -26,7 +26,13 @@ import (
 
 func WithTracing(handler http.Handler, tracer opentracing.Tracer) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx, span := trace.NewSpan(req.Context(), "WithTracing")
+		var opts []opentracing.StartSpanOption
+		parentSpan, err := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+		if err == nil {
+			opts = append(opts, opentracing.ChildOf(parentSpan))
+		}
+
+		ctx, span := trace.NewSpan(req.Context(), "WithTracing", opts...)
 		defer span.Finish()
 
 		req = req.WithContext(ctx)

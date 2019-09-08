@@ -17,16 +17,24 @@ limitations under the License.
 package trace
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
 	opentracinglog "github.com/opentracing/opentracing-go/log"
 
 	"k8s.io/klog"
+)
+
+const (
+	traceIDHeader = "x-kubernetes-trace-id"
+	spanIDHeader  = "x-kubernetes-span-id"
 )
 
 var (
@@ -104,6 +112,16 @@ func (t *kTracer) StartSpan(name string, opts ...opentracing.StartSpanOption) op
 //
 // See https://godoc.org/github.com/opentracing/opentracing-go#Tracer
 func (*kTracer) Inject(spanCtx opentracing.SpanContext, format interface{}, carrier interface{}) error {
+	ksc := spanCtx.(kSpanContext)
+	switch format {
+	case opentracing.HTTPHeaders:
+		hc := carrier.(opentracing.HTTPHeadersCarrier)
+		hc.Set(traceIDHeader, toStringID(ksc.traceID))
+		hc.Set(spanIDHeader, toStringID(ksc.spanID))
+	default:
+		// TextMap and Binary carriers are not supported.
+		maybePanic("unknown carrier")
+	}
 	return nil
 }
 
@@ -111,7 +129,36 @@ func (*kTracer) Inject(spanCtx opentracing.SpanContext, format interface{}, carr
 //
 // See https://godoc.org/github.com/opentracing/opentracing-go#Tracer
 func (*kTracer) Extract(format interface{}, carrier interface{}) (opentracing.SpanContext, error) {
-	return nil, opentracing.ErrSpanContextNotFound
+	switch format {
+	case opentracing.HTTPHeaders:
+		hc := carrier.(opentracing.HTTPHeadersCarrier)
+		var spanCtx kSpanContext
+		if err := hc.ForeachKey(func(k, v string) error {
+			var err error
+			if strings.EqualFold(k, traceIDHeader) {
+				spanCtx.traceID, err = fromStringID(v)
+				return err
+			}
+			if strings.EqualFold(k, spanIDHeader) {
+				spanCtx.spanID, err = fromStringID(v)
+				return nil
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+		if spanCtx.traceID == 0 {
+			return nil, opentracing.ErrSpanContextNotFound
+		}
+		if spanCtx.spanID == 0 {
+			// TODO(mikedanese): document why this is a good think to do.
+			spanCtx.spanID = spanCtx.traceID
+		}
+		return &spanCtx, nil
+	default:
+		// TextMap and Binary carriers are not supported.
+		panic("unsupported carrier")
+	}
 }
 
 type kSpan struct {
@@ -253,6 +300,39 @@ func newID() uint64 {
 		panic(err) // out of randomness, should never happen
 	}
 	return binary.BigEndian.Uint64(buf)
+}
+
+const hexStringUint64Length = 18
+
+var hexStringPrefix = []byte{'0', 'x'}
+
+func toStringID(id uint64) string {
+	buf := make([]byte, hexStringUint64Length)
+	copy(buf[0:2], hexStringPrefix)
+
+	ibuf := make([]byte, 8)
+	binary.BigEndian.PutUint64(ibuf, id)
+
+	hex.Encode(buf[2:], ibuf)
+	return string(buf)
+}
+
+func fromStringID(id string) (uint64, error) {
+	b := []byte(id)
+	if len(b) != hexStringUint64Length {
+		return 0, fmt.Errorf("unexpected hex uint64 length %d: %s", len(b), id)
+	}
+	if bytes.Compare(hexStringPrefix, b[0:2]) != 0 {
+		return 0, fmt.Errorf("unexpected hex uint64 fromat: %s", id)
+	}
+
+	ibuf := make([]byte, 8)
+	_, err := hex.Decode(ibuf, b[2:])
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint64(ibuf), nil
 }
 
 type Sampler interface {
