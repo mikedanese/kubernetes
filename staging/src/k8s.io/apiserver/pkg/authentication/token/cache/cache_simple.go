@@ -19,31 +19,32 @@ package cache
 import (
 	"time"
 
-	lrucache "k8s.io/apimachinery/pkg/util/cache"
+	utilcache "k8s.io/apimachinery/pkg/util/cache"
 	"k8s.io/apimachinery/pkg/util/clock"
 )
 
 type simpleCache struct {
-	lru *lrucache.LRUExpireCache
+	c *utilcache.Expiring
 }
 
-func newSimpleCache(size int, clock clock.Clock) cache {
-	return &simpleCache{lru: lrucache.NewLRUExpireCacheWithClock(size, clock)}
+func newSimpleCache(_ int, _ clock.Clock) *simpleCache {
+	return &simpleCache{
+		c: utilcache.NewExpiring(),
+	}
 }
 
 func (c *simpleCache) get(key string) (*cacheRecord, bool) {
-	record, ok := c.lru.Get(key)
+	e, ok := c.c.Get(key)
 	if !ok {
 		return nil, false
 	}
-	value, ok := record.(*cacheRecord)
-	return value, ok
+	return e.(*cacheRecord), true
 }
 
-func (c *simpleCache) set(key string, value *cacheRecord, ttl time.Duration) {
-	c.lru.Add(key, value, ttl)
+func (c *simpleCache) set(key string, record *cacheRecord, ttl time.Duration) {
+	c.c.Set(key, record, ttl)
 }
 
 func (c *simpleCache) remove(key string) {
-	c.lru.Remove(key)
+	c.c.Delete(key)
 }
