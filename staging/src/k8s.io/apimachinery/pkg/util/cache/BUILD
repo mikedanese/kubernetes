@@ -23,6 +23,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "cache.go",
+        "expiring.go",
         "lruexpirecache.go",
     ],
     importmap = "k8s.io/kubernetes/vendor/k8s.io/apimachinery/pkg/util/cache",
