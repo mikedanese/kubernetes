@@ -21,6 +21,8 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"errors"
+	"flag"
 	"fmt"
 	mathrand "math/rand"
 	"reflect"
@@ -174,13 +176,18 @@ func BenchmarkKeyFunc(b *testing.B) {
 func BenchmarkCachedTokenAuthenticator(b *testing.B) {
 	tokenCount := []int{100, 500, 2500, 12500, 62500}
 	for _, tc := range tokenCount {
-		b.Run(fmt.Sprintf("toks-%v", tc), newSingleBenchmark(tc).bench)
+		newSingleBenchmark(tc).run(b)
 	}
 }
 
+var threads = flag.Int("thread", 256, "")
+
 func newSingleBenchmark(tokenCount int) *singleBenchmark {
-	s := &singleBenchmark{}
-	s.makeTokens(tokenCount)
+	s := &singleBenchmark{
+		threadCount: *threads,
+		tokenCount:  tokenCount,
+	}
+	s.makeTokens()
 	return s
 }
 
@@ -188,6 +195,7 @@ func newSingleBenchmark(tokenCount int) *singleBenchmark {
 // question this benchmark answers is, "what's the average latency added by the
 // cache for N concurrent tokens?"
 type singleBenchmark struct {
+	threadCount int
 	// These token.* variables are set by makeTokens()
 	tokenCount int
 	// pre-computed response for a token
@@ -204,8 +212,7 @@ type singleBenchmark struct {
 	wg sync.WaitGroup
 }
 
-func (s *singleBenchmark) makeTokens(count int) {
-	s.tokenCount = count
+func (s *singleBenchmark) makeTokens() {
 	s.tokenToResponse = map[string]*cacheRecord{}
 	s.tokenToAuds = map[string]authenticator.Audiences{}
 	s.tokens = []string{}
@@ -232,7 +239,7 @@ func (s *singleBenchmark) makeTokens(count int) {
 			r.err = nil
 		default:
 			r.ok = false
-			r.err = fmt.Errorf("I can't think of a clever error name right now")
+			r.err = errors.New("I can't think of a clever error name right now")
 		}
 		s.tokens = append(s.tokens, tok)
 		s.tokenToResponse[tok] = &r
@@ -256,23 +263,9 @@ func (s *singleBenchmark) lookup(ctx context.Context, token string) (*authentica
 // To prevent contention over a channel, and to minimize the case where some
 // goroutines finish before others, vary the number of goroutines and batch
 // size based on the benchmark size.
-func (s *singleBenchmark) queueBatches() (<-chan int, int) {
-	batchSize := 1
-	threads := 1
-
-	switch {
-	case s.b.N < 5000:
-		threads = s.b.N
-		batchSize = 1
-	default:
-		threads = 5000
-		batchSize = s.b.N / (threads * 10)
-		if batchSize < 1 {
-			batchSize = 1
-		}
-	}
-
-	batches := make(chan int, threads*2)
+func (s *singleBenchmark) queueBatches() <-chan int {
+	batchSize := s.b.N
+	batches := make(chan int, s.threadCount*2)
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -285,7 +278,7 @@ func (s *singleBenchmark) queueBatches() (<-chan int, int) {
 		batches <- remaining
 	}()
 
-	return batches, threads
+	return batches
 }
 
 func (s *singleBenchmark) doAuthForTokenN(n int, a authenticator.Token) {
@@ -294,6 +287,10 @@ func (s *singleBenchmark) doAuthForTokenN(n int, a authenticator.Token) {
 	ctx := context.Background()
 	ctx = authenticator.WithAudiences(ctx, auds)
 	a.AuthenticateToken(ctx, tok)
+}
+
+func (s *singleBenchmark) run(b *testing.B) {
+	b.Run(fmt.Sprintf("tokens=%d threads=%d", s.tokenCount, s.threadCount), s.bench)
 }
 
 func (s *singleBenchmark) bench(b *testing.B) {
@@ -311,10 +308,10 @@ func (s *singleBenchmark) bench(b *testing.B) {
 		s.chokepoint <- struct{}{}
 	}
 
-	batches, threadCount := s.queueBatches()
+	batches := s.queueBatches()
 	s.b.ResetTimer()
 
-	for i := 0; i < threadCount; i++ {
+	for i := 0; i < s.threadCount; i++ {
 		s.wg.Add(1)
 		go func() {
 			defer s.wg.Done()
