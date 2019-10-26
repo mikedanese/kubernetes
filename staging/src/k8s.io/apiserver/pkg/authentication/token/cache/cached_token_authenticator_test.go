@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	utilclock "k8s.io/apimachinery/pkg/util/clock"
+	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apiserver/pkg/authentication/authenticator"
 	"k8s.io/apiserver/pkg/authentication/user"
@@ -48,19 +48,16 @@ func TestCachedTokenAuthenticator(t *testing.T) {
 		calledWithToken = append(calledWithToken, token)
 		return &authenticator.Response{User: resultUsers[token]}, resultOk, resultErr
 	})
-	fakeClock := utilclock.NewFakeClock(time.Now())
 
-	a := newWithClock(fakeAuth, true, time.Minute, 0, fakeClock)
+	a := New(fakeAuth, true, time.Minute, 0)
 
 	calledWithToken, resultUsers, resultOk, resultErr = []string{}, nil, false, nil
 	a.AuthenticateToken(context.Background(), "bad1")
 	a.AuthenticateToken(context.Background(), "bad2")
 	a.AuthenticateToken(context.Background(), "bad3")
-	fakeClock.Step(2 * time.Microsecond)
 	a.AuthenticateToken(context.Background(), "bad1")
 	a.AuthenticateToken(context.Background(), "bad2")
 	a.AuthenticateToken(context.Background(), "bad3")
-	fakeClock.Step(2 * time.Microsecond)
 	if !reflect.DeepEqual(calledWithToken, []string{"bad1", "bad2", "bad3", "bad1", "bad2", "bad3"}) {
 		t.Errorf("Expected failing calls to not stay in the cache, got %v", calledWithToken)
 	}
@@ -105,16 +102,13 @@ func TestCachedTokenAuthenticator(t *testing.T) {
 	}
 
 	// skip forward in time
-	fakeClock.Step(2 * time.Minute)
 
 	// backend is consulted again and fails
 	a.AuthenticateToken(context.Background(), "usertoken1")
 	a.AuthenticateToken(context.Background(), "usertoken2")
 	a.AuthenticateToken(context.Background(), "usertoken3")
-	if !reflect.DeepEqual(calledWithToken, []string{"usertoken1", "usertoken2", "usertoken3"}) {
-		if false {
-			t.Errorf("Expected token calls, got %v", calledWithToken)
-		}
+	if got, want := calledWithToken, []string{"usertoken1", "usertoken2", "usertoken3"}; !cmp.Equal(got, want) {
+		t.Errorf("Expected token calls: %s", cmp.Diff(got, want))
 	}
 }
 
@@ -124,9 +118,8 @@ func TestCachedTokenAuthenticatorWithAudiences(t *testing.T) {
 		auds, _ := authenticator.AudiencesFrom(ctx)
 		return &authenticator.Response{User: resultUsers[auds[0]+token]}, true, nil
 	})
-	fakeClock := utilclock.NewFakeClock(time.Now())
 
-	a := newWithClock(fakeAuth, true, time.Minute, 0, fakeClock)
+	a := New(fakeAuth, true, time.Minute, 0)
 
 	resultUsers["audAusertoken1"] = &user.DefaultInfo{Name: "user1"}
 	resultUsers["audBusertoken1"] = &user.DefaultInfo{Name: "user1-different"}
@@ -191,6 +184,12 @@ func newSingleBenchmark(tokenCount int) *singleBenchmark {
 	}
 	s.makeTokens()
 	return s
+}
+
+type cacheRecord struct {
+	resp *authenticator.Response
+	ok   bool
+	err  error
 }
 
 // singleBenchmark collects all the state needed to run a benchmark. The
@@ -297,12 +296,11 @@ func (s *singleBenchmark) run(b *testing.B) {
 
 func (s *singleBenchmark) bench(b *testing.B) {
 	s.b = b
-	a := newWithClock(
+	a := New(
 		authenticator.TokenFunc(s.lookup),
 		true,
 		4*time.Second,
 		500*time.Millisecond,
-		utilclock.RealClock{},
 	)
 	const maxInFlight = 40
 	s.chokepoint = make(chan struct{}, maxInFlight)
