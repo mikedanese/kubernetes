@@ -24,11 +24,7 @@ go_test(
 
 go_library(
     name = "go_default_library",
-    srcs = [
-        "cache_simple.go",
-        "cache_striped.go",
-        "cached_token_authenticator.go",
-    ],
+    srcs = ["cached_token_authenticator.go"],
     importmap = "k8s.io/kubernetes/vendor/k8s.io/apiserver/pkg/authentication/token/cache",
     importpath = "k8s.io/apiserver/pkg/authentication/token/cache",
     deps = [

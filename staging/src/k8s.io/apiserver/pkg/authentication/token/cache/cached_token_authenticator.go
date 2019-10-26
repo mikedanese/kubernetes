@@ -28,16 +28,9 @@ import (
 	"time"
 	"unsafe"
 
-	utilclock "k8s.io/apimachinery/pkg/util/clock"
+	"k8s.io/apimachinery/pkg/util/cache"
 	"k8s.io/apiserver/pkg/authentication/authenticator"
 )
-
-// cacheRecord holds the three return values of the authenticator.Token AuthenticateToken method
-type cacheRecord struct {
-	resp *authenticator.Response
-	ok   bool
-	err  error
-}
 
 type cachedTokenAuthenticator struct {
 	authenticator authenticator.Token
@@ -46,7 +39,7 @@ type cachedTokenAuthenticator struct {
 	successTTL time.Duration
 	failureTTL time.Duration
 
-	cache cache
+	cache *cache.Expiring
 
 	// hashPool is a per authenticator pool of hash.Hash (to avoid allocations from building the Hash)
 	// HMAC with SHA-256 and a random key is used to prevent precomputation and length extension attacks
@@ -54,21 +47,8 @@ type cachedTokenAuthenticator struct {
 	hashPool *sync.Pool
 }
 
-type cache interface {
-	// given a key, return the record, and whether or not it existed
-	get(key string) (value *cacheRecord, exists bool)
-	// caches the record for the key
-	set(key string, value *cacheRecord, ttl time.Duration)
-	// removes the record for the key
-	remove(key string)
-}
-
 // New returns a token authenticator that caches the results of the specified authenticator. A ttl of 0 bypasses the cache.
 func New(authenticator authenticator.Token, cacheErrs bool, successTTL, failureTTL time.Duration) authenticator.Token {
-	return newWithClock(authenticator, cacheErrs, successTTL, failureTTL, utilclock.RealClock{})
-}
-
-func newWithClock(authenticator authenticator.Token, cacheErrs bool, successTTL, failureTTL time.Duration, clock utilclock.Clock) authenticator.Token {
 	randomCacheKey := make([]byte, 32)
 	if _, err := rand.Read(randomCacheKey); err != nil {
 		panic(err) // rand should never fail
@@ -79,14 +59,7 @@ func newWithClock(authenticator authenticator.Token, cacheErrs bool, successTTL,
 		cacheErrs:     cacheErrs,
 		successTTL:    successTTL,
 		failureTTL:    failureTTL,
-		// Cache performance degrades noticeably when the number of
-		// tokens in operation exceeds the size of the cache. It is
-		// cheap to make the cache big in the second dimension below,
-		// the memory is only consumed when that many tokens are being
-		// used. Currently we advertise support 5k nodes and 10k
-		// namespaces; a 32k entry cache is therefore a 2x safety
-		// margin.
-		cache: newStripedCache(32, fnvHashFunc, func() cache { return newSimpleCache(1024, clock) }),
+		cache:         cache.NewExpiring(),
 
 		hashPool: &sync.Pool{
 			New: func() interface{} {
@@ -101,20 +74,17 @@ func (a *cachedTokenAuthenticator) AuthenticateToken(ctx context.Context, token 
 	auds, _ := authenticator.AudiencesFrom(ctx)
 
 	key := keyFunc(a.hashPool, auds, token)
-	if record, ok := a.cache.get(key); ok {
-		return record.resp, record.ok, record.err
+	if e, ok := a.cache.Get(key); ok {
+		return e.(*authenticator.Response), true, nil
 	}
 
 	resp, ok, err := a.authenticator.AuthenticateToken(ctx, token)
-	if !a.cacheErrs && err != nil {
+	if err != nil {
 		return resp, ok, err
 	}
 
-	switch {
-	case ok && a.successTTL > 0:
-		a.cache.set(key, &cacheRecord{resp: resp, ok: ok, err: err}, a.successTTL)
-	case !ok && a.failureTTL > 0:
-		a.cache.set(key, &cacheRecord{resp: resp, ok: ok, err: err}, a.failureTTL)
+	if ok {
+		a.cache.Set(key, resp, a.successTTL)
 	}
 
 	return resp, ok, err
